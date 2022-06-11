@@ -1,0 +1,16 @@
+name: xls
+version: 0.1.0
+
+authors:
+  - Michael Wagner <mdwranger@gmail.com>
+
+crystal: '>= 1.4.1'
+
+license: MIT
+
+libraries:
+  libxls: ">= 1.6.2"
+
+targets:
+  xlsparser:
+    main: src/main.cr
