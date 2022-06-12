@@ -3,18 +3,38 @@ require "./xls"
 alias LibXls = Xls::LibXls
 
 def main
-  puts String.new(LibXls.version)
+  puts Xls::Spreadsheet.xls_version
+  xls = Xls::Spreadsheet.new(Path.new(ARGV[0]))
+  wb = xls.workbook_ptr
 
-  wb = LibXls.open_file(ARGV[0], "UTF-8", out error)
-  unless wb.null?
-    sheet = LibXls.get_worksheet(wb, 0)
-    status = LibXls.parse_worksheet(sheet)
-    row = LibXls.row(sheet, 0)
-    cell = row.value.cells.cell[0]
-    puts String.new(cell.str)
+  # Make CSV
+  wb.value.sheets.count.times do |sheet_index|
+    work_sheet = LibXls.get_worksheet(wb, sheet_index)
+
+    break if work_sheet.null?
+
+    status = LibXls.parse_worksheet(work_sheet)
+
+    unless status.libxls_ok?
+      puts String.new(LibXls.error(status))
+      puts
+    end
+
+    work_sheet.value.rows.lastrow.times do |row_index|
+      row = LibXls.row(work_sheet, row_index)
+      last_col = work_sheet.value.rows.lastcol
+
+      row.value.cells.cell.to_slice(last_col).each_with_index do |cell, cell_index|
+        if cell.str.null?
+          print ""
+        else
+          print %("#{String.new(cell.str)}")
+        end
+        print ","
+      end
+      puts
+    end
   end
-ensure
-  LibXls.close_workbook(wb) if wb
 end
 
 main
