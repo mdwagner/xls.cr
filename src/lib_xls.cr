@@ -247,6 +247,7 @@ module Xls
     # Historical API
     fun open = xls_open(file : LibC::Char*, charset : LibC::Char*) : XlsWorkBook*
 
+    @[Raises]
     fun get_worksheet = xls_getWorkSheet(workbook : XlsWorkBook*, num : Int32) : XlsWorkSheet*
     fun close_worksheet = xls_close_WS(worksheet : XlsWorkSheet*) : Void
 

@@ -5,7 +5,7 @@ alias LibXls = Xls::LibXls
 def main
   puts Xls::Spreadsheet.xls_version
   xls = Xls::Spreadsheet.new(Path.new(ARGV[0]))
-  wb = xls.workbook_ptr
+  wb = xls.workbook!
 
   # Make CSV
   wb.value.sheets.count.times do |sheet_index|
@@ -37,4 +37,18 @@ def main
   end
 end
 
-main
+# main
+
+def main2
+  pp! Xls::Spreadsheet.xls_version
+  xls = Xls::Spreadsheet.new(Path.new(ARGV[0]))
+  pp! xls.workbook.charset
+  pp! xls.workbook.summary
+  pp! xls.workbook.sheets.names
+  xls.workbook.sheets.each do |sheet|
+    sheet.close!
+  end
+  xls.close!
+end
+
+main2
