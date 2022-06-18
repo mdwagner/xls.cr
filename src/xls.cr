@@ -58,10 +58,10 @@ module Xls
   end
 
   class Workbook
-    def initialize(@workbook : LibXls::XlsWorkBook*)
+    protected def initialize(@workbook : LibXls::XlsWorkBook*)
     end
 
-    def sheets
+    def sheets : Sheets
       Sheets.new(@workbook)
     end
 
@@ -90,18 +90,18 @@ module Xls
     end
   end
 
-  class WorkSheetParserError < Exception
-    def initialize(message = "Unknown")
-      super(message)
-    end
-  end
-
   class Worksheet
-    def initialize(@worksheet : LibXls::XlsWorkSheet*)
+    class ParserError < Exception
+      def initialize(message = "Unknown")
+        super(message)
+      end
+    end
+
+    protected def initialize(@worksheet : LibXls::XlsWorkSheet*)
       status = LibXls.parse_worksheet(@worksheet)
       unless status.libxls_ok?
         message = String.new(LibXls.error(status))
-        raise WorkSheetParserError.new(message)
+        raise ParserError.new(message)
       end
     end
 
@@ -115,15 +115,17 @@ module Xls
 
     @sheets : Slice(LibXls::StSheetData)
 
-    def initialize(@workbook : LibXls::XlsWorkBook*)
+    protected def initialize(@workbook : LibXls::XlsWorkBook*)
       raw_sheet = @workbook.value.sheets
       @sheets = raw_sheet.sheet.to_slice(raw_sheet.count)
     end
 
-    delegate size, to: @sheets
-
-    def names
+    def names : Array(String)
       @sheets.map { |sheet| String.new(sheet.name) }.to_a
+    end
+
+    def count
+      @sheets.size
     end
 
     def each
@@ -133,7 +135,7 @@ module Xls
           yield Worksheet.new(raw_worksheet)
         rescue ex
           case ex
-          when WorkSheetParserError
+          when Worksheet::ParserError
             puts ex.message
             next
           else
