@@ -40,15 +40,22 @@ end
 # main
 
 def main2
-  pp! Xls::Spreadsheet.xls_version
-  xls = Xls::Spreadsheet.new(Path.new(ARGV[0]))
-  pp! xls.workbook.charset
-  pp! xls.workbook.summary
-  pp! xls.workbook.sheets.names
-  xls.workbook.sheets.each do |sheet|
-    sheet.close!
+  Xls::Spreadsheet.open(Path.new(ARGV[0])) do |wb|
+    wb.sheets.each! do |ws|
+      pp! ws.row_count
+      pp! ws.col_count
+
+      ws.each_row do |h|
+        h
+      end
+
+      # ws.each_row(
+      #   name: "Name",
+      #   type: "Leave Type",
+      #   email: "Email"
+      # ) { |h| pp! h }
+    end
   end
-  xls.close!
 end
 
 main2

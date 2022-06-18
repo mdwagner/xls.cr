@@ -98,6 +98,9 @@ module Xls
     end
 
     protected def initialize(@worksheet : LibXls::XlsWorkSheet*)
+    end
+
+    def parse! : Nil
       status = LibXls.parse_worksheet(@worksheet)
       unless status.libxls_ok?
         message = String.new(LibXls.error(status))
@@ -108,10 +111,114 @@ module Xls
     def close! : Nil
       LibXls.close_worksheet(@worksheet)
     end
+
+    def row_count
+      @worksheet.value.rows.lastrow.to_i
+    end
+
+    def col_count
+      @worksheet.value.rows.lastcol.to_i
+    end
+
+    def each_row(**kwargs, &)
+      headers = get_headers
+      row_count.times do |row|
+        next if row == 0
+
+        hash = {} of String => String
+
+        if kwargs.empty?
+          headers.each do |key, col|
+            cell = LibXls.cell(@worksheet, row, col)
+            value = cell_value(cell.value).to_s
+            hash[key] = value
+
+            x = {
+              "id" => match_id(cell.value.id),
+              "str" => cell.value.str ? String.new(cell.value.str) : cell.value.str
+            }
+            pp! x
+          end
+        else
+          kwargs.each do |hash_key, matching_header|
+            col = headers[matching_header]
+            cell = LibXls.cell(@worksheet, row, col)
+            value = cell_value(cell.value).to_s
+            hash["#{hash_key}"] = value
+          end
+        end
+
+        yield hash
+      end
+    end
+
+    private def get_headers
+      headers = {} of String => Int32
+      col_count.times do |col|
+        cell = LibXls.cell(@worksheet, 0, col)
+        value = cell_value(cell.value).to_s
+        headers[value] = col
+      end
+      headers
+    end
+
+    private def cell_value(cell)
+      # pp! match_id(cell.id)
+      if cell.id == LibXls::XLS_RECORD_BLANK
+        nil
+      elsif cell.id == LibXls::XLS_RECORD_NUMBER
+        cell.d
+      else
+        if cell.str
+          String.new(cell.str)
+        else
+          nil
+        end
+      end
+    end
+
+    def match_id(id)
+      {% begin %}
+      {%
+        constants = LibXls.constants.select do |constant|
+          constant.starts_with?("XLS_RECORD")
+        end
+      %}
+        case id
+        {% for constant in constants %}
+        when LibXls::{{constant.id}}
+          {{constant.id.stringify}}
+        {% end %}
+        else
+          id
+        end
+      {% end %}
+    end
+  end
+
+  private class WorksheetIterator
+    include Iterator(Worksheet)
+    alias SheetData = ::Slice(LibXls::StSheetData)
+
+    def initialize(@sheets : SheetData, @workbook : LibXls::XlsWorkBook*)
+      @index = 0
+    end
+
+    def next
+      if @index < @sheets.size
+        index = @index
+        @index += 1
+        raw_worksheet = LibXls.get_worksheet(@workbook, index)
+        Worksheet.new(raw_worksheet)
+      else
+        stop
+      end
+    end
   end
 
   class Sheets
     include Enumerable(Worksheet)
+    include Iterable(Worksheet)
 
     @sheets : Slice(LibXls::StSheetData)
 
@@ -121,28 +228,33 @@ module Xls
     end
 
     def names : Array(String)
-      @sheets.map { |sheet| String.new(sheet.name) }.to_a
+      @sheets.each.map { |sheet| String.new(sheet.name) }.to_a
     end
 
     def count
       @sheets.size
     end
 
-    def each
+    def each(& : Worksheet ->) : Nil
       @sheets.each_with_index do |_, index|
+        raw_worksheet = LibXls.get_worksheet(@workbook, index)
+        yield Worksheet.new(raw_worksheet)
+      end
+    end
+
+    def each!(& : Worksheet ->) : Nil
+      each do |ws|
         begin
-          raw_worksheet = LibXls.get_worksheet(@workbook, index)
-          yield Worksheet.new(raw_worksheet)
-        rescue ex
-          case ex
-          when Worksheet::ParserError
-            puts ex.message
-            next
-          else
-            break
-          end
+          ws.parse!
+          yield ws
+        ensure
+          ws.close!
         end
       end
+    end
+
+    def each
+      WorksheetIterator.new(@sheets, @workbook)
     end
   end
 end
