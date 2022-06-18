@@ -1,6 +1,6 @@
 # xls
 
-TODO: Write a description here
+Crystal bindings to libxls
 
 ## Installation
 
@@ -9,7 +9,7 @@ TODO: Write a description here
    ```yaml
    dependencies:
      xls:
-       github: your-github-user/xls.cr
+       github: mdwagner/xls.cr
    ```
 
 2. Run `shards install`
@@ -28,7 +28,7 @@ TODO: Write development instructions here
 
 ## Contributing
 
-1. Fork it (<https://github.com/your-github-user/xls.cr/fork>)
+1. Fork it (<https://github.com/mdwagner/xls.cr/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
@@ -36,4 +36,4 @@ TODO: Write development instructions here
 
 ## Contributors
 
-- [Michael Wagner](https://github.com/your-github-user) - creator and maintainer
+- [Michael Wagner](https://github.com/mdwagner) - creator and maintainer
