@@ -2,9 +2,28 @@ require "./version"
 require "./lib_xls"
 
 module Xls
+  {% begin %}
+  {%
+    constants = LibXls.constants.select do |constant|
+      constant.starts_with?("XLS_RECORD")
+    end
+  %}
+    enum XlsRecord
+      {% for constant in constants %}
+      {{ constant.gsub(/^XLS\_/, "").capitalize.camelcase.id }} = LibXls::{{ constant.id }}
+      {% end %}
+    end
+  {% end %}
+
   class Spreadsheet
+    # Retrieve libxls version
     def self.xls_version
       String.new(LibXls.version)
+    end
+
+    # Enable debug mode for libxls
+    def self.debugging(enable : Bool = true) : Nil
+      LibXls.xls(enable ? 1 : 0)
     end
 
     def self.open_file(path : Path, charset : String = "UTF-8")
@@ -39,11 +58,12 @@ module Xls
     private def initialize(@workbook : LibXls::XlsWorkBook*, @workbook_err : LibXls::XlsError)
     end
 
+    # Closes libxls Workbook
     def close! : Nil
       LibXls.close_workbook(@workbook)
     end
 
-    # Raw Pointer to Workbook for Advanced Usage
+    # Raw Pointer to libxls Workbook for Advanced Usage
     def workbook! : LibXls::XlsWorkBook*
       @workbook
     end
@@ -97,6 +117,12 @@ module Xls
       end
     end
 
+    class CellError < Exception
+      def to_s(io)
+        io << self.class.name
+      end
+    end
+
     protected def initialize(@worksheet : LibXls::XlsWorkSheet*)
     end
 
@@ -132,12 +158,6 @@ module Xls
             cell = LibXls.cell(@worksheet, row, col)
             value = cell_value(cell.value).to_s
             hash[key] = value
-
-            x = {
-              "id" => match_id(cell.value.id),
-              "str" => cell.value.str ? String.new(cell.value.str) : cell.value.str
-            }
-            pp! x
           end
         else
           kwargs.each do |hash_key, matching_header|
@@ -162,37 +182,45 @@ module Xls
       headers
     end
 
-    private def cell_value(cell)
-      # pp! match_id(cell.id)
-      if cell.id == LibXls::XLS_RECORD_BLANK
-        nil
-      elsif cell.id == LibXls::XLS_RECORD_NUMBER
-        cell.d
+    private def ptr_to_s(ptr) : String
+      if ptr
+        String.new(ptr)
       else
-        if cell.str
-          String.new(cell.str)
+        ""
+      end
+    end
+
+    private def cell_value(cell)
+      if id = XlsRecord.from_value?(cell.id)
+        case id
+        when .record_boolerr?
+          cell_boolerr(cell)
+        when .record_number?, .record_rk?
+          cell.d.to_f64
+        when .record_labelsst?, .record_label?, .record_rstring?
+          ptr_to_s(cell.str)
+        else
+          nil
+        end
+      else
+        nil
+      end
+    end
+
+    private def cell_boolerr(cell, str_fallback = false)
+      str = ptr_to_s(cell.str)
+      case str
+      when "bool"
+        cell.d.to_f64 > 0
+      when "error"
+        CellError.new
+      else
+        if str_fallback
+          str
         else
           nil
         end
       end
-    end
-
-    def match_id(id)
-      {% begin %}
-      {%
-        constants = LibXls.constants.select do |constant|
-          constant.starts_with?("XLS_RECORD")
-        end
-      %}
-        case id
-        {% for constant in constants %}
-        when LibXls::{{constant.id}}
-          {{constant.id.stringify}}
-        {% end %}
-        else
-          id
-        end
-      {% end %}
     end
   end
 

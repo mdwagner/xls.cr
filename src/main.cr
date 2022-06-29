@@ -40,6 +40,7 @@ end
 # main
 
 def main2
+  # Xls::Spreadsheet.debugging
   Xls::Spreadsheet.open(Path.new(ARGV[0])) do |wb|
     wb.sheets.each! do |ws|
       pp! ws.row_count
@@ -53,7 +54,7 @@ def main2
       #   name: "Name",
       #   type: "Leave Type",
       #   email: "Email"
-      # ) { |h| pp! h }
+      # ) { |h| p! h }
     end
   end
 end
