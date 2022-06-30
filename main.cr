@@ -1,4 +1,4 @@
-require "./xls"
+require "./src/xls"
 
 alias LibXls = Xls::LibXls
 
