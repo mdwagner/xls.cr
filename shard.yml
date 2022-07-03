@@ -12,8 +12,8 @@ libraries:
   libxls: ">= 1.6.2"
 
 targets:
-  xlsparser:
-    main: src/main.cr
+  xls:
+    main: src/xls.cr
 
 development_dependencies:
   spectator:
