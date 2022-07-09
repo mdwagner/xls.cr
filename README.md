@@ -26,6 +26,29 @@ TODO: Write usage instructions here
 
 TODO: Write development instructions here
 
+## How it works
+
+```
+Xls::Spreadsheet(1) -> Xls::Workbook(1) -> Xls::Sheets(N) -> Xls::Worksheet(N)
+```
+
+### Xls::Spreadsheet
+
+- Represents the `.xls` file (pointer)
+
+### Xls::Workbook
+
+- Metadata, including accessing sheets
+
+### Xls::Sheets
+
+- Parses sheets and gives you valid worksheets
+- Gives you sheet names and count
+
+### Xls::Worksheet
+
+- Content of a worksheet (rows, cols, types, etc.)
+
 ## Contributing
 
 1. Fork it (<https://github.com/mdwagner/xls.cr/fork>)
