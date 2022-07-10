@@ -1,13 +1,9 @@
+require "./worksheet/*"
+
 class Xls::Worksheet
   class ParserError < Exception
     def initialize(message = "Unknown")
       super(message)
-    end
-  end
-
-  class CellError < Exception
-    def to_s(io)
-      io << self.class.name
     end
   end
 
@@ -78,35 +74,35 @@ class Xls::Worksheet
     end
   end
 
-  private def cell_value(cell)
+  private def cell_value(cell) : Cell::Any
     if id = XlsRecord.from_value?(cell.id)
       case id
       when .record_boolerr?
         cell_boolerr(cell)
       when .record_number?, .record_rk?
-        cell.d.to_f64
+        Cell::Any.new(cell.d.to_f64)
       when .record_labelsst?, .record_label?, .record_rstring?
-        ptr_to_s(cell.str)
+        Cell::Any.new(ptr_to_s(cell.str))
       else
-        nil
+        Cell::Any.new(nil)
       end
     else
-      nil
+      Cell::Any.new(nil)
     end
   end
 
-  private def cell_boolerr(cell, str_fallback = false)
+  private def cell_boolerr(cell, str_fallback = false) : Cell::Any
     str = ptr_to_s(cell.str)
     case str
     when "bool"
-      cell.d.to_f64 > 0
+      Cell::Any.new(cell.d.to_f64 > 0)
     when "error"
-      CellError.new
+      Cell::Any.new(Cell::Error.new)
     else
       if str_fallback
-        str
+        Cell::Any.new(str)
       else
-        nil
+        Cell::Any.new(nil)
       end
     end
   end

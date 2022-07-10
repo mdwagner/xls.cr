@@ -48,6 +48,10 @@ Xls::Spreadsheet(1) -> Xls::Workbook(1) -> Xls::Sheets(N) -> Xls::Worksheet(N)
 ### Xls::Worksheet
 
 - Content of a worksheet (rows, cols, types, etc.)
+- Types
+  - work like JSON::Any/XML::Any/etc.
+  - Single type is a union of all possible types
+  - has different methods to assert usage: as_s/as_s?
 
 ## Contributing
 

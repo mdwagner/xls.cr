@@ -5,8 +5,8 @@ class Xls::Spreadsheet
   end
 
   # Enable debug mode for libxls
-  def self.debugging(enable : Bool = true) : Nil
-    LibXls.xls(enable ? 1 : 0)
+  def self.debugging(enable = true, value = 1) : Nil
+    LibXls.xls(enable ? value : 0)
   end
 
   def self.open_file(path : Path, charset : String = "UTF-8")
@@ -37,6 +37,50 @@ class Xls::Spreadsheet
     wb = LibXls.open_buffer(io.to_s, io.size, io.encoding, out error)
     new(wb, error)
   end
+
+  ###############
+  # begin
+  #   Spreadsheet.open("path") do |s|
+  #     # workbook_ptr
+  #     # check for invalid workbook_ptr
+  #     s.summary # metadata
+  #     s.worksheets.each do |worksheet| # (valid) worksheets
+  #       # parses each worksheet first
+  #       worksheet.name
+  #       worksheet.each_row { ... }
+  #     end
+  #   end
+  # rescue Spreadsheet::Error # workbook_ptr is invalid
+  #   exit 1
+  # end
+  ###############
+
+  ###############
+  # s = Spreadsheet.new("path")
+  # s.validate! : Nil # throws
+  # s.valid? : Bool
+  # s.summary
+  # s.worksheets.each { ... }
+  # s.raw_worksheets # Worksheet.new(..., parse = false)
+  # s.close!
+  ###############
+
+  ###############
+  # def worksheets : Array(Worksheet)
+  #   # TODO: consider memoization
+  #   raw_sheets = @workbook.value.sheets
+  #   sheets = raw_sheets.sheet.to_slice(raw_sheets.count)
+  #   sheets.map_with_index do |sheet, index|
+  #     sheet_name = Xls::Utils.ptr_to_str(sheet.name)
+  #     raw_visibility = sheet.visibility
+  #     raw_type = sheet.type
+  #     raw_filepos = sheet.filepos
+  #     raw_worksheet = LibXls.get_worksheet(@workbook, index)
+  #     LibXls.parse_worksheet(raw_worksheet) # TODO: erorr handling for invalid worksheet
+  #     Worksheet.new(raw_worksheet, sheet_name, raw_visibility, raw_type, raw_filepos)
+  #   end.to_a
+  # end
+  ###############
 
   private def initialize(@workbook : LibXls::XlsWorkBook*, @workbook_err : LibXls::XlsError)
   end
