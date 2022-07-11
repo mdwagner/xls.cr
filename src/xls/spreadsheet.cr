@@ -89,7 +89,7 @@ class Xls::Spreadsheet
   private def initialize(@workbook : LibXls::XlsWorkBook*, @workbook_err : LibXls::XlsError)
   end
 
-  # Validates the Spreadsheet
+  # Validates the spreadsheet
   #
   # Can throw if invalid.
   def validate! : Nil
@@ -99,7 +99,7 @@ class Xls::Spreadsheet
     end
   end
 
-  # Validates the Spreadsheet *safely*
+  # Validates the spreadsheet *safely*
   def valid? : Bool
     begin
       validate!
@@ -109,58 +109,63 @@ class Xls::Spreadsheet
     end
   end
 
-  # Closes the Spreadsheet
+  # Closes the `Xls::Spreadsheet` and any `Xls::Worksheet`s
   #
-  # Once a Spreadsheet is closed, it cannot be reopened in the same instance. You must create a new Spreadsheet instance to reopen it.
+  # Once a `Xls::Spreadsheet` is closed, it cannot be reopened in the same instance. You must create a new `Xls::Spreadsheet` instance to reopen it.
   def close : Nil
     @closed ||= begin
+      @worksheets.each { |ws| LibXls.close_worksheet(ws) }
       LibXls.close_workbook(@workbook)
       true
     end
   end
 
-  # Checks if the Spreadsheet is closed
+  # Checks if the `Xls::Spreadsheet` is closed
   def closed? : Bool
     @closed ? true : false
   end
 
-  # Returns worksheets for the Spreadsheet
+  # Returns worksheets for the spreadsheet
   #
   # TODO: not implemented yet
   def worksheets : Array(Worksheet)
-    ###############
-    # def worksheets : Array(Worksheet)
-    #   # TODO: consider memoization
-    #   raw_sheets = @workbook.value.sheets
-    #   sheets = raw_sheets.sheet.to_slice(raw_sheets.count)
-    #   sheets.map_with_index do |sheet, index|
-    #     sheet_name = Xls::Utils.ptr_to_str(sheet.name)
-    #     raw_visibility = sheet.visibility
-    #     raw_type = sheet.type
-    #     raw_filepos = sheet.filepos
-    #     raw_worksheet = LibXls.get_worksheet(@workbook, index)
-    #     LibXls.parse_worksheet(raw_worksheet) # TODO: erorr handling for invalid worksheet
-    #     Worksheet.new(raw_worksheet, sheet_name, raw_visibility, raw_type, raw_filepos)
-    #   end.to_a
-    # end
-    ###############
-
-    [] of Worksheet
+    @worksheets ||= begin
+      raw_sheets = @workbook.value.sheets
+      sheets = raw_sheets.sheet.to_slice(raw_sheets.count)
+      sheets.each.map_with_index do |sheet, index|
+        raw_worksheet = LibXls.get_worksheet(@workbook, index)
+        status = LibXls.parse_worksheet(raw_worksheet)
+        unless status.libxls_ok?
+          message = Xls::Utils.ptr_to_str(LibXls.error(status))
+          raise Worksheet::ParserError.new(message)
+        end
+        Worksheet.new(
+          raw_worksheet: raw_worksheet,
+          sheet_name: Xls::Utils.ptr_to_str(sheet.name),
+          raw_visibility: sheet.visibility,
+          raw_type: sheet.type,
+          raw_filepos: sheet.filepos
+        )
+      end.to_a
+    rescue
+      # TODO: not sure yet, so just returning empty worksheets
+      [] of Worksheet
+    end
   end
 
-  # Returns the encoding of the Spreadsheet
+  # Returns the encoding of the spreadsheet
   def charset : String
-    Xls::Utils.ptr_to_str(@workbook.value.charset)
+    @charset ||= Xls::Utils.ptr_to_str(@workbook.value.charset)
   end
 
-  # Returns the Summary of the Spreadsheet
+  # Returns the *Summary* of the spreadsheet
   def summary : String
-    Xls::Utils.ptr_to_str(@workbook.value.summary)
+    @summary ||= Xls::Utils.ptr_to_str(@workbook.value.summary)
   end
 
-  # Returns the Document Summary of the Spreadsheet
+  # Returns the *Document Summary* of the spreadsheet
   def doc_summary : String
-    Xls::Utils.ptr_to_str(@workbook.value.docSummary)
+    @doc_summary ||= Xls::Utils.ptr_to_str(@workbook.value.docSummary)
   end
 
   # Returns the index to the active (displayed) worksheet

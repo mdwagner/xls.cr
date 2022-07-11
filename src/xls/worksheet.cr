@@ -1,5 +1,3 @@
-require "./worksheet/*"
-
 class Xls::Worksheet
   class ParserError < Exception
     def initialize(message = "Unknown")
@@ -7,19 +5,13 @@ class Xls::Worksheet
     end
   end
 
-  protected def initialize(@worksheet : LibXls::XlsWorkSheet*)
-  end
-
-  def parse! : Nil
-    status = LibXls.parse_worksheet(@worksheet)
-    unless status.libxls_ok?
-      message = String.new(LibXls.error(status))
-      raise ParserError.new(message)
-    end
-  end
-
-  def close! : Nil
-    LibXls.close_worksheet(@worksheet)
+  protected def initialize(
+    raw_worksheet @worksheet : LibXls::XlsWorkSheet*,
+    @sheet_name : String,
+    raw_visibility @sheet_visibility : UInt8,
+    raw_type @sheet_type : UInt8,
+    raw_filepos @sheet_filepos : UInt32
+  )
   end
 
   def row_count
