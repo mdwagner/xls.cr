@@ -1,8 +1,157 @@
 class Xls::Worksheet
-  # class Cell
-  # protected def initialize(@cell : LibXls::StCellData)
-  # end
-  # end
+  class Cell
+    struct Error
+      def to_s(io)
+        io << "Cell::Error"
+      end
+
+      def inspect(io)
+        io << "Cell::Error"
+      end
+    end
+
+    struct Any
+      alias Type = Nil | Bool | Float64 | String | Error
+
+      getter raw : Type
+
+      def initialize(@raw)
+      end
+
+      # Checks that the underlying value is `Nil`, and returns `nil`
+      # Raises otherwise.
+      def as_nil : Nil
+        @raw.as(Nil)
+      end
+
+      # Checks that the underlying value is `Bool`, and returns its value
+      # Raises otherwise.
+      def as_bool : Bool
+        @raw.as(Bool)
+      end
+
+      # Checks that the underlying value is `Bool`, and returns its value
+      # Returns `nil` otherwise.
+      def as_bool? : Bool?
+        as_bool if @raw.is_a?(Bool)
+      end
+
+      # Checks that the underlying value is `Float64`, and returns its value
+      # Raises otherwise.
+      def as_f : Float64
+        @raw.as(Float64)
+      end
+
+      # Checks that the underlying value is `Float64`, and returns its value
+      # Returns `nil` otherwise.
+      def as_f? : Float64?
+        as_f if @raw.is_a?(Float64)
+      end
+
+      # Checks that the underlying value is `String`, and returns its value
+      # Raises otherwise.
+      def as_s : String
+        @raw.as(String)
+      end
+
+      # Checks that the underlying value is `String`, and returns its value
+      # Returns `nil` otherwise.
+      def as_s? : String?
+        as_s if @raw.is_a?(String)
+      end
+
+      # Checks that the underlying value is `Xls::Worksheet::Cell::Error`, and returns its value
+      # Raises otherwise.
+      def as_error : Error
+        @raw.as(Error)
+      end
+
+      # Checks that the underlying value is `Xls::Worksheet::Cell::Error`, and returns its value
+      # Returns `nil` otherwise.
+      def as_error? : Error?
+        as_error if @raw.is_a?(Error)
+      end
+    end
+
+    protected def initialize(@cell : LibXls::StCellData)
+    end
+
+    def id : XlsRecord
+      XlsRecord.from_value(@cell.id)
+    end
+
+    def row : UInt16
+      @cell.row
+    end
+
+    def col : UInt16
+      @cell.col
+    end
+
+    # See `Xls::Worksheet::ColumnInfo#xf`
+    def xf : UInt16
+      @cell.xf
+    end
+
+    # See `Xls::Worksheet#defcolwidth`
+    def width : UInt16
+      @cell.width
+    end
+
+    # Returns the span of columns
+    #
+    # NOTE: Untested
+    def colspan : UInt16
+      @cell.colspan
+    end
+
+    # Returns the span of rows
+    #
+    # NOTE: Untested
+    def rowspan : UInt16
+      @cell.rowspan
+    end
+
+    # Returns whether this cell is hidden
+    def is_hidden? : Bool
+      @cell.isHidden == 1
+    end
+
+    private def raw_string
+      Xls::Utils.ptr_to_str(@cell.str)
+    end
+
+    private def raw_double
+      @cell.d.to_f64
+    end
+
+    private def raw_long
+      @cell.l.to_i32
+    end
+
+    # Returns the value of this cell as `Xls::Worksheet::Cell::Any`
+    #
+    # You must invoke `Xls::Worksheet::Cell::Any#raw` to get the raw value.
+    def value : Any
+      @value ||= begin
+        case id
+        when .record_boolerr?
+          case raw_string
+          when "bool"
+            return Any.new(raw_double > 0)
+          when "error"
+            return Any.new(Error.new)
+          end
+        when .record_number?, .record_rk?
+          return Any.new(raw_double)
+        when .record_labelsst?, .record_label?, .record_rstring?
+          return Any.new(raw_string)
+        end
+
+        Any.new(nil)
+      end
+    end
+  end
 
   class Row
     protected def initialize(@row : LibXls::StRowData)
@@ -17,44 +166,53 @@ class Xls::Worksheet
       @cells ||= begin
         raw_cells = @row.cells
         raw_cells.cell.to_slice(raw_cells.count).each.map do |cell|
-          # Cell.new(cell)
+          Cell.new(cell)
         end.to_a
       end
     end
 
-    # Returns the first `Xls::Worksheet::Cell`'s index
-    #
-    # NOTE: Untested
-    def fcell
+    # Returns the index to the column of the first cell which is described by a cell record
+    def fcell : UInt16
       @row.fcell
     end
 
-    # Returns the last `Xls::Worksheet::Cell`'s index
-    #
-    # NOTE: Untested
-    def lcell
+    # Returns the index to the column of the last cell which is described by a cell record, increased by 1
+    def lcell : UInt16
       @row.lcell
     end
 
-    # Returns the height of this `Xls::Worksheet::Row`
-    #
-    # NOTE: Untested
-    def height
-      @row.height
+    record HeightMetadata,
+      height : UInt16,
+      default_height : Bool do
+      def is_custom_height? : Bool
+        !default_height
+      end
+
+      def is_default_height? : Bool
+        default_height
+      end
+    end
+
+    # Returns the height of the row, in twips = 1/20 of a point
+    def height : HeightMetadata
+      HeightMetadata.new(
+        height: @row.height.bits(0..14),
+        default_height: @row.height.bit(15) == 1
+      )
     end
 
     # :nodoc:
-    def raw_flags
+    def flags
       @row.flags
     end
 
     # :ditto:
-    def raw_xf
+    def xf
       @row.xf
     end
 
     # :ditto:
-    def raw_xfflags
+    def xfflags
       @row.xfflags
     end
   end
@@ -64,46 +222,48 @@ class Xls::Worksheet
     end
 
     # Returns the index to the first column in the range
-    def first
+    def first : UInt16
       @colinfo.first
     end
 
     # Returns the index to the last column in the range
-    def last
+    def last : UInt16
       @colinfo.last
     end
 
     # Returns the width of the columns in 1/256 of the width of the zero character, using default font (the first FONT record in the file)
-    def width
+    def width : UInt16
       @colinfo.width
     end
 
     # Returns the index to the XF record for default column formatting
-    def xf
+    def xf : UInt16
       @colinfo.xf
     end
 
-    record ColumnInfoFlags,
+    record OptionFlags,
       columns_hidden : Bool,
       columns_outline_level : UInt16,
-      columns_collapsed : Bool
+      columns_collapsed : Bool do
+      def columns_hidden? : Bool
+        columns_hidden
+      end
 
-    # Returns any option flags
-    #
-    # See table below.
-    #
-    # ```markdown
-    # | Bits | Mask | Contents                                      |
-    # |------|------|-----------------------------------------------|
-    # | 0    | 0001 | 1 = Columns are hidden                        |
-    # | 10-8 | 0700 | Outline level of the columns (0 = no outline) |
-    # | 12   | 1000 | 1 = Columns are collapsed                     |
-    # ```
-    def flags : ColumnInfoFlags
-      ColumnInfoFlags.new(
-        columns_hidden: @colinfo.flags.bit(0) == 1 ? true : false,
+      def columns_collapsed? : Bool
+        columns_collapsed
+      end
+
+      def no_outline? : Bool
+        columns_outline_level == 0
+      end
+    end
+
+    # Returns option flags
+    def flags : OptionFlags
+      OptionFlags.new(
+        columns_hidden: @colinfo.flags.bit(0) == 1,
         columns_outline_level: @colinfo.flags.bits(8..10),
-        columns_collapsed: @colinfo.flags.bit(12) == 1 ? true : false
+        columns_collapsed: @colinfo.flags.bit(12) == 1
       )
     end
   end
@@ -118,11 +278,11 @@ class Xls::Worksheet
   end
 
   # Returns the name of the worksheet
-  def name
+  def name : String
     @sheet_name
   end
 
-  def columns : Array(ColumnInfo)
+  def columns_info : Array(ColumnInfo)
     @columns ||= begin
       raw_colinfo = @worksheet.value.colinfo
       raw_colinfo.col.to_slice(raw_colinfo.count).each.map do |info|
@@ -146,6 +306,7 @@ class Xls::Worksheet
     VeryHidden
   end
 
+  # Returns the worksheet visibility
   def sheet_visibility : SheetState
     SheetState.from_value(@sheet_visibility)
   end
@@ -156,113 +317,28 @@ class Xls::Worksheet
     VisualBasicModule = 6
   end
 
+  # Returns the worksheet type
   def sheet_type : SheetType
     SheetType.from_value(@sheet_type)
   end
 
   # Returns the absolute stream position of the BOF record of the sheet represented by this record
-  def sheet_filepos
-    @sheet_filepos
-  end
-
-  # :ditto:
-  def worksheet_filepos
-    @worksheet.value.filepos
+  def sheet_filepos : UInt32
+    sheet_filepos = @sheet_filepos
+    worksheet_filepos = @worksheet.value.filepos
+    if sheet_filepos != worksheet_filepos
+      Log.warn &.emit("Worksheet filepos mismatched",
+        sheet_filepos: sheet_filepos,
+        worksheet_filepos: worksheet_filepos,
+        worksheet_name: name)
+    end
+    sheet_filepos
   end
 
   # Returns the default column width for columns that do not have a specific width already set
   #
   # Column width in characters, using the width of the zero character from default font (first FONT record in the file).
-  def defcolwidth
+  def defcolwidth : UInt16
     @worksheet.value.defcolwidth
   end
-
-  #
-  #
-  #
-
-  # def row_count
-  # @worksheet.value.rows.lastrow.to_i
-  # end
-
-  # def col_count
-  # @worksheet.value.rows.lastcol.to_i
-  # end
-
-  # def each_row(**kwargs, &)
-  # headers = get_headers
-  # row_count.times do |row|
-  # next if row == 0
-
-  # hash = {} of String => String
-
-  # if kwargs.empty?
-  # headers.each do |key, col|
-  # cell = LibXls.cell(@worksheet, row, col)
-  # value = cell_value(cell.value).to_s
-  # hash[key] = value
-  # end
-  # else
-  # kwargs.each do |hash_key, matching_header|
-  # col = headers[matching_header]
-  # cell = LibXls.cell(@worksheet, row, col)
-  # value = cell_value(cell.value).to_s
-  # hash["#{hash_key}"] = value
-  # end
-  # end
-
-  # yield hash
-  # end
-  # end
-
-  # private def get_headers
-  # headers = {} of String => Int32
-  # col_count.times do |col|
-  # cell = LibXls.cell(@worksheet, 0, col)
-  # value = cell_value(cell.value).to_s
-  # headers[value] = col
-  # end
-  # headers
-  # end
-
-  # private def ptr_to_s(ptr) : String
-  # if ptr
-  # String.new(ptr)
-  # else
-  # ""
-  # end
-  # end
-
-  # private def cell_value(cell) : Cell::Any
-  # if id = XlsRecord.from_value?(cell.id)
-  # case id
-  # when .record_boolerr?
-  # cell_boolerr(cell)
-  # when .record_number?, .record_rk?
-  # Cell::Any.new(cell.d.to_f64)
-  # when .record_labelsst?, .record_label?, .record_rstring?
-  # Cell::Any.new(ptr_to_s(cell.str))
-  # else
-  # Cell::Any.new(nil)
-  # end
-  # else
-  # Cell::Any.new(nil)
-  # end
-  # end
-
-  # private def cell_boolerr(cell, str_fallback = false) : Cell::Any
-  # str = ptr_to_s(cell.str)
-  # case str
-  # when "bool"
-  # Cell::Any.new(cell.d.to_f64 > 0)
-  # when "error"
-  # Cell::Any.new(Cell::Error.new)
-  # else
-  # if str_fallback
-  # Cell::Any.new(str)
-  # else
-  # Cell::Any.new(nil)
-  # end
-  # end
-  # end
 end

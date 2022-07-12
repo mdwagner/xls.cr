@@ -68,12 +68,12 @@ class Xls::Spreadsheet
   # Can only be called once.
   #
   # Throws `Xls::Error` if spreadsheet is invalid.
-  # Throws `Xls::WorkbookParserError` if spreadsheet failed to parse.
+  # Throws `Xls::WorkbookParserException` if spreadsheet failed to parse.
   def validate! : Nil
     @validated ||= begin
       raise Error.new(@workbook_err) unless @workbook
       status = LibXls.parse_workbook(@workbook)
-      raise WorkbookParserError.new(status) unless status.libxls_ok?
+      raise WorkbookParserException.new(status) unless status.libxls_ok?
       true
     end
   end
@@ -96,7 +96,7 @@ class Xls::Spreadsheet
 
   # Returns worksheets for the spreadsheet
   #
-  # Throws `Xls::WorksheetParserError` if a worksheet failed to parse.
+  # Throws `Xls::WorksheetParserException` if a worksheet failed to parse.
   def worksheets : Array(Worksheet)
     @worksheets ||= begin
       raw_sheets = @workbook.value.sheets
@@ -104,7 +104,7 @@ class Xls::Spreadsheet
       sheets.each.map_with_index do |sheet, index|
         raw_worksheet = LibXls.get_worksheet(@workbook, index)
         status = LibXls.parse_worksheet(raw_worksheet)
-        raise WorksheetParserError.new(status) unless status.libxls_ok?
+        raise WorksheetParserException.new(status) unless status.libxls_ok?
         Worksheet.new(
           raw_worksheet: raw_worksheet,
           sheet_name: Xls::Utils.ptr_to_str(sheet.name),

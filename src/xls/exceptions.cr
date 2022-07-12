@@ -2,7 +2,7 @@ module Xls
   class FileNotFound < Exception
   end
 
-  class WorksheetParserExcpetion < Exception
+  class WorksheetParserException < Exception
     def initialize(err : LibXls::XlsError)
       super(Xls::Utils.internal_err_to_str(err))
     end
@@ -14,7 +14,7 @@ module Xls
     end
   end
 
-  class WorkbookParserExcpetion < Exception
+  class WorkbookParserException < Exception
     def initialize(err : LibXls::XlsError)
       super(Xls::Utils.internal_err_to_str(err))
     end
