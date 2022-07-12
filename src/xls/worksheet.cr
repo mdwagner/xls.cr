@@ -1,10 +1,4 @@
 class Xls::Worksheet
-  class ParserError < Exception
-    def initialize(message = "Unknown")
-      super(message)
-    end
-  end
-
   protected def initialize(
     raw_worksheet @worksheet : LibXls::XlsWorkSheet*,
     @sheet_name : String,
@@ -12,6 +6,26 @@ class Xls::Worksheet
     raw_type @sheet_type : UInt8,
     raw_filepos @sheet_filepos : UInt32
   )
+  end
+
+  # Returns the name of the worksheet
+  def name
+    @sheet_name
+  end
+
+  # :nodoc:
+  def raw_visibility
+    @sheet_visibility
+  end
+
+  # :ditto:
+  def raw_type
+    @sheet_type
+  end
+
+  # :ditto:
+  def raw_filepos
+    @sheet_filepos
   end
 
   def row_count

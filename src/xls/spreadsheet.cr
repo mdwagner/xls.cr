@@ -12,12 +12,22 @@ class Xls::Spreadsheet
     LibXls.xls(enable ? value : 0)
   end
 
+  # Creates a new `Xls::Spreadsheet` by opening a file
+  #
+  # *charset* can be an encoding other than UTF-8.
+  #
+  # Throws `Xls::FileNotFound` if the filepath cannot be found.
   def self.open_file(path : Path, charset : String = "UTF-8")
-    raise "File not found" unless File.file?(path)
+    raise FileNotFound.new unless File.file?(path)
     wb = LibXls.open_file(path.to_s, charset, out error)
     new(wb, error)
   end
 
+  # Yields a new `Xls::Spreadsheet` by providing a filepath or string or IO
+  #
+  # Calls `#validate!` on the newly created `Xls::Spreadsheet`.
+  #
+  # Always invokes `#close` after yielding.
   def self.open(file_or_content, & : Spreadsheet ->)
     begin
       instance = new file_or_content
@@ -28,88 +38,47 @@ class Xls::Spreadsheet
     end
   end
 
+  # Creates a new `Xls::Spreadsheet` by providing a filepath
+  #
+  # Throws `Xls::FileNotFound` if the filepath cannot be found.
   def self.new(path : Path)
-    raise "File not found" unless File.file?(path)
+    raise FileNotFound.new unless File.file?(path)
     new File.read(path)
   end
 
+  # Creates a new `Xls::Spreadsheet` by providing a string
   def self.new(content : String)
     new IO::Memory.new(content)
   end
 
+  # Creates a new `Xls::Spreadsheet` by providing an IO
   def self.new(io : IO)
     wb = LibXls.open_buffer(io.to_s, io.size, io.encoding, out error)
     new(wb, error)
   end
 
-  ###############
-  # begin
-  #   Spreadsheet.open("path") do |s|
-  #     # workbook_ptr
-  #     # check for invalid workbook_ptr
-  #     s.summary # metadata
-  #     s.worksheets.each do |worksheet| # (valid) worksheets
-  #       # parses each worksheet first
-  #       worksheet.name
-  #       worksheet.each_row { ... }
-  #     end
-  #   end
-  # rescue Spreadsheet::Error # workbook_ptr is invalid
-  #   exit 1
-  # end
-  ###############
-
-  ###############
-  # s = Spreadsheet.new("path")
-  # s.validate! : Nil # throws
-  # s.valid? : Bool
-  # s.summary
-  # s.worksheets.each { ... }
-  # s.raw_worksheets # Worksheet.new(..., parse = false)
-  # s.close!
-  ###############
-
-  ###############
-  # def worksheets : Array(Worksheet)
-  #   # TODO: consider memoization
-  #   raw_sheets = @workbook.value.sheets
-  #   sheets = raw_sheets.sheet.to_slice(raw_sheets.count)
-  #   sheets.map_with_index do |sheet, index|
-  #     sheet_name = Xls::Utils.ptr_to_str(sheet.name)
-  #     raw_visibility = sheet.visibility
-  #     raw_type = sheet.type
-  #     raw_filepos = sheet.filepos
-  #     raw_worksheet = LibXls.get_worksheet(@workbook, index)
-  #     LibXls.parse_worksheet(raw_worksheet) # TODO: erorr handling for invalid worksheet
-  #     Worksheet.new(raw_worksheet, sheet_name, raw_visibility, raw_type, raw_filepos)
-  #   end.to_a
-  # end
-  ###############
-
-  private def initialize(@workbook : LibXls::XlsWorkBook*, @workbook_err : LibXls::XlsError)
+  private def initialize(
+    @workbook : LibXls::XlsWorkBook*,
+    @workbook_err : LibXls::XlsError
+  )
   end
 
   # Validates the spreadsheet
   #
-  # Can throw if invalid.
+  # Can only be called once.
+  #
+  # Throws `Xls::Error` if spreadsheet is invalid.
+  # Throws `Xls::WorkbookParserError` if spreadsheet failed to parse.
   def validate! : Nil
-    unless @workbook
-      message = Xls::Utils.ptr_to_str(LibXls.error(@workbook_err))
-      raise message # TODO: make custom exception
-    end
-  end
-
-  # Validates the spreadsheet *safely*
-  def valid? : Bool
-    begin
-      validate!
+    @validated ||= begin
+      raise Error.new(@workbook_err) unless @workbook
+      status = LibXls.parse_workbook(@workbook)
+      raise WorkbookParserError.new(status) unless status.libxls_ok?
       true
-    rescue
-      false
     end
   end
 
-  # Closes the `Xls::Spreadsheet` and any `Xls::Worksheet`s
+  # Closes the `Xls::Spreadsheet` and any `Xls::Worksheet`'s
   #
   # Once a `Xls::Spreadsheet` is closed, it cannot be reopened in the same instance. You must create a new `Xls::Spreadsheet` instance to reopen it.
   def close : Nil
@@ -127,7 +96,7 @@ class Xls::Spreadsheet
 
   # Returns worksheets for the spreadsheet
   #
-  # TODO: not implemented yet
+  # Throws `Xls::WorksheetParserError` if a worksheet failed to parse.
   def worksheets : Array(Worksheet)
     @worksheets ||= begin
       raw_sheets = @workbook.value.sheets
@@ -135,10 +104,7 @@ class Xls::Spreadsheet
       sheets.each.map_with_index do |sheet, index|
         raw_worksheet = LibXls.get_worksheet(@workbook, index)
         status = LibXls.parse_worksheet(raw_worksheet)
-        unless status.libxls_ok?
-          message = Xls::Utils.ptr_to_str(LibXls.error(status))
-          raise Worksheet::ParserError.new(message)
-        end
+        raise WorksheetParserError.new(status) unless status.libxls_ok?
         Worksheet.new(
           raw_worksheet: raw_worksheet,
           sheet_name: Xls::Utils.ptr_to_str(sheet.name),
@@ -147,9 +113,6 @@ class Xls::Spreadsheet
           raw_filepos: sheet.filepos
         )
       end.to_a
-    rescue
-      # TODO: not sure yet, so just returning empty worksheets
-      [] of Worksheet
     end
   end
 
