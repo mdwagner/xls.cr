@@ -2,10 +2,6 @@ module Xls
   # https://github.com/libxls/libxls
   @[Link("xlsreader")]
   lib LibXls
-    alias Byte = LibC::UInt8T
-    alias Word = LibC::UInt16T
-    alias DWord = LibC::UInt32T
-
     XLS_RECORD_EOF              = 0x000A
     XLS_RECORD_DEFINEDNAME      = 0x0018
     XLS_RECORD_NOTE             = 0x001C
@@ -59,89 +55,49 @@ module Xls
       LIBXLS_ERROR_MALLOC
     end
 
-    struct StOleFilesData
-      name : LibC::Char*
-      start, size : DWord
-    end
-
-    type StOleFilesDataT = StOleFilesData
-
-    struct StOleFiles
-      count : LibC::Long
-      file : StOleFilesData*
-    end
-
-    type StOleFilesT = StOleFiles
-
-    struct OLE2
-      file : Void* # FILE
-      buffer : Void*
-      buffer_len, buffer_pos : LibC::SizeT
-      lsector, lssector : Word
-      cfat, dirstart, sectorcutoff, sfatstart, csfat, difstart, cdiff : DWord
-      # secID = "SecID" : DWord*
-      # secIDCount = "SecIDCount" : DWord
-      # ssecID = "SSecID" : DWord*
-      # ssecIDCount = "SSecIDCount" : DWord
-      # ssat = "SSAT" : Byte*
-      # ssatCount = "SSATCount" : DWord
-      files : StOleFilesT
-    end
-
-    type OLE2T = OLE2
-
-    struct OLE2Stream
-      ole : OLE2T*
-      start : DWord
-      pos, cfat, size, fatpos : LibC::SizeT
-      buf : Byte*
-      bufsize : DWord
-      eof, sfat : Byte
-    end
-
-    type OLE2StreamT = OLE2Stream
+    type OLE2StreamT = Void*
 
     struct StSheetData
-      filepos : DWord
-      visibility, type : Byte
+      filepos : LibC::UInt32T
+      visibility, type : LibC::UInt8T
       name : LibC::Char*
     end
 
     struct StSheet
-      count : DWord
+      count : LibC::UInt32T
       sheet : StSheetData*
     end
 
     struct StFontData
-      height, flag, color, bold, escapement : Word
-      underline, family, charset : Byte
+      height, flag, color, bold, escapement : LibC::UInt16T
+      underline, family, charset : LibC::UInt8T
       name : LibC::Char*
     end
 
     struct StFont
-      count : DWord
+      count : LibC::UInt32T
       font : StFontData*
     end
 
     struct StFormatData
-      index : Word
+      index : LibC::UInt16T
       value : LibC::Char*
     end
 
     struct StFormat
-      count : DWord
+      count : LibC::UInt32T
       format : StFormatData*
     end
 
     struct StXfData
-      font, format, type : Word
-      align, rotation, ident, usedattr : Byte
-      linestyle, linecolor : DWord
-      groundcolor : Word
+      font, format, type : LibC::UInt16T
+      align, rotation, ident, usedattr : LibC::UInt8T
+      linestyle, linecolor : LibC::UInt32T
+      groundcolor : LibC::UInt16T
     end
 
     struct StXf
-      count : DWord
+      count : LibC::UInt32T
       xf : StXfData*
     end
 
@@ -150,70 +106,63 @@ module Xls
     end
 
     struct StSST
-      count, lastid, continued, lastln, lastrt, lastsz : DWord
+      count, lastid, continued, lastln, lastrt, lastsz : LibC::UInt32T
       string : StrSSTString*
     end
 
     struct StCellData
-      id, row, col, xf : Word
+      id, row, col, xf : LibC::UInt16T
       str : LibC::Char*
       d : LibC::Double
       l : LibC::Int32T
-      width, colspan, rowspan : Word
-      isHidden : Byte
+      width, colspan, rowspan : LibC::UInt16T
+      isHidden : LibC::UInt8T
     end
 
     struct StCell
-      count : DWord
+      count : LibC::UInt32T
       cell : StCellData*
     end
 
     struct StRowData
-      index, fcell, lcell, height, flags, xf : Word
-      xfflags : Byte
+      index, fcell, lcell, height, flags, xf : LibC::UInt16T
+      xfflags : LibC::UInt8T
       cells : StCell
     end
 
     struct StRow
-      lastcol, lastrow : Word
+      lastcol, lastrow : LibC::UInt16T
       row : StRowData*
     end
 
     struct StColInfoData
-      first, last, width, xf, flags : Word
+      first, last, width, xf, flags : LibC::UInt16T
     end
 
     struct StColInfo
-      count : DWord
+      count : LibC::UInt32T
       col : StColInfoData*
     end
 
     struct XlsWorkBook
-      # file : Void* # FILE*
       olestr : OLE2StreamT*
       filepos : LibC::Int32T
-
-      # From Header (BIFF)
-      is5ver, is1904 : Byte
-      type, activeSheetIdx : Word
-
-      # Other data
-      codepage : Word
+      is5ver, is1904 : LibC::UInt8T
+      type, activeSheetIdx : LibC::UInt16T
+      codepage : LibC::UInt16T
       charset : LibC::Char*
       sheets : StSheet
       sst : StSST
       xfs : StXf
       fonts : StFont
       formats : StFormat
-
       summary, docSummary : LibC::Char*
-
       converter, utf16_converter, utf8_locale : Void*
     end
 
     struct XlsWorkSheet
-      filepos : DWord
-      defcolwidth : Word
+      filepos : LibC::UInt32T
+      defcolwidth : LibC::UInt16T
       rows : StRow
       workbook : XlsWorkBook*
       colinfo : StColInfo
@@ -223,10 +172,10 @@ module Xls
     alias XlsRow = StRowData
 
     struct XlsSummaryInfo
-      title, subject, author, keywords, comment, lastAuthor, appName, category, manager, company : Byte*
+      title, subject, author, keywords, comment, lastAuthor, appName, category, manager, company : LibC::UInt8T*
     end
 
-    alias XlsFormulaHandler = Word, Word, Byte* -> Void
+    alias XlsFormulaHandler = LibC::UInt16T, LibC::UInt16T, LibC::UInt8T* -> Void
 
     fun version = xls_getVersion : LibC::Char*
     fun error = xls_getError(code : XlsError) : LibC::Char*
@@ -255,7 +204,7 @@ module Xls
     fun close_summary_info = xls_close_summaryInfo(summary : XlsSummaryInfo*) : Void
 
     # utility function
-    fun row = xls_row(worksheet : XlsWorkSheet*, cell_row : Word) : XlsRow*
-    fun cell = xls_cell(worksheet : XlsWorkSheet*, cell_row : Word, cell_col : Word) : XlsCell*
+    fun row = xls_row(worksheet : XlsWorkSheet*, cell_row : LibC::UInt16T) : XlsRow*
+    fun cell = xls_cell(worksheet : XlsWorkSheet*, cell_row : LibC::UInt16T, cell_col : LibC::UInt16T) : XlsCell*
   end
 end
