@@ -73,6 +73,8 @@ class Xls::Worksheet
       end
     end
 
+    @value : Any?
+
     protected def initialize(@cell : LibXls::StCellData)
     end
 

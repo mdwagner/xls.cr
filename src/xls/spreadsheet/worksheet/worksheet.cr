@@ -15,6 +15,9 @@ class Xls::Worksheet
     VisualBasicModule = 6
   end
 
+  @columns : Array(ColumnInfo)?
+  @rows : Array(Row)?
+
   protected def initialize(
     @worksheet : LibXls::XlsWorkSheet*,
     @sheet : LibXls::StSheetData

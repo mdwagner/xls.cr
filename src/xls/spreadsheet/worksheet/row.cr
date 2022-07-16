@@ -12,6 +12,8 @@ class Xls::Worksheet
       end
     end
 
+    @cells : Array(Cell)?
+
     protected def initialize(@row : LibXls::StRowData)
     end
 

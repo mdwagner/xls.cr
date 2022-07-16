@@ -1,6 +1,6 @@
 # xls
 
-Crystal bindings to libxls
+Crystal bindings to [libxls](https://github.com/libxls/libxls)
 
 ## Installation
 
@@ -10,6 +10,7 @@ Crystal bindings to libxls
    dependencies:
      xls:
        github: mdwagner/xls.cr
+       version: 0.2.0
    ```
 
 2. Run `shards install`
@@ -18,40 +19,17 @@ Crystal bindings to libxls
 
 ```crystal
 require "xls"
+
+Xls::Spreadsheet # <- library entry point
 ```
+
+Look at `examples/` folder for idea of usage.
 
 TODO: Write usage instructions here
 
 ## Development
 
 TODO: Write development instructions here
-
-## How it works
-
-```
-Xls::Spreadsheet(1) -> Xls::Workbook(1) -> Xls::Sheets(N) -> Xls::Worksheet(N)
-```
-
-### Xls::Spreadsheet
-
-- Represents the `.xls` file (pointer)
-
-### Xls::Workbook
-
-- Metadata, including accessing sheets
-
-### Xls::Sheets
-
-- Parses sheets and gives you valid worksheets
-- Gives you sheet names and count
-
-### Xls::Worksheet
-
-- Content of a worksheet (rows, cols, types, etc.)
-- Types
-  - work like JSON::Any/XML::Any/etc.
-  - Single type is a union of all possible types
-  - has different methods to assert usage: as_s/as_s?
 
 ## Contributing
 
