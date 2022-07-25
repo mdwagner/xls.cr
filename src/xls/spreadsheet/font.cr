@@ -1,8 +1,10 @@
 class Xls::Spreadsheet
   class Font
+    getter real_index : UInt32
+
     protected def initialize(
       @font : LibXls::StFontData,
-      @real_index : UInt32
+      @real_index
     )
     end
 

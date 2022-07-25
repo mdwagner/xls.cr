@@ -49,6 +49,11 @@ class Xls::Worksheet
       )
     end
 
+    # TODO: link
+    def xf : UInt16
+      @row.xf
+    end
+
     def to_unsafe
       pointerof(@row)
     end

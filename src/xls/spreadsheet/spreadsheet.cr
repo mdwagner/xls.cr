@@ -174,7 +174,7 @@ class Xls::Spreadsheet
       raw_fonts = @workbook.value.fonts
       raw_fonts_slice = raw_fonts.font.to_slice(raw_fonts.count)
       raw_fonts_slice.each.map_with_index do |font, index|
-        real_index : UInt32 = index
+        real_index : UInt32 = index.to_u32
         if index >= 4
           real_index += 1
         end
@@ -187,7 +187,7 @@ class Xls::Spreadsheet
   #
   # All FORMAT records occur together in a sequential list.
   def formats : Array(Format)
-    @format ||= begin
+    @formats ||= begin
       raw_formats = @workbook.value.formats
       raw_formats.format.to_slice(raw_formats.count).each.map do |format|
         Format.new(
@@ -206,5 +206,25 @@ class Xls::Spreadsheet
         Xf.new(xf)
       end.to_a
     end
+  end
+
+  def get_xf?(value : Worksheet::ColumnInfo) : Xf?
+    xfs[value.xf]?
+  end
+
+  def get_xf?(value : Worksheet::Cell) : Xf?
+    xfs[value.xf]?
+  end
+
+  def get_xf?(value : Worksheet::Row) : Xf?
+    xfs[value.xf]?
+  end
+
+  def get_font?(value : Xf) : Font?
+    fonts.find { |font| font.real_index == value.font }
+  end
+
+  def get_format?(value : Xf) : Format?
+    formats[value.format]?
   end
 end
