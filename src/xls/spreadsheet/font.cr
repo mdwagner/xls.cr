@@ -25,7 +25,49 @@ class Xls::Spreadsheet
       outlined : Bool,
       shadowed : Bool,
       condensed : Bool,
-      extended : Bool
+      extended : Bool do
+      def to_s(io : IO) : Nil
+        io << self.class.name
+        io << "("
+
+        io << "bold: "
+        bold.inspect(io)
+        io << ", "
+
+        io << "italic: "
+        italic.inspect(io)
+        io << ", "
+
+        io << "underlined: "
+        underlined.inspect(io)
+        io << ", "
+
+        io << "struck_out: "
+        struck_out.inspect(io)
+        io << ", "
+
+        io << "outlined: "
+        outlined.inspect(io)
+        io << ", "
+
+        io << "shadowed: "
+        shadowed.inspect(io)
+        io << ", "
+
+        io << "condensed: "
+        condensed.inspect(io)
+        io << ", "
+
+        io << "extended: "
+        extended.inspect(io)
+
+        io << ")"
+      end
+
+      def inspect(io : IO) : Nil
+        to_s(io)
+      end
+    end
 
     def flag : OptionFlags
       OptionFlags.new(
@@ -127,6 +169,56 @@ class Xls::Spreadsheet
 
     def charset : FontCharset
       FontCharset.from_value(@font.charset)
+    end
+
+    def to_s(io : IO) : Nil
+      io << self.class.name
+      io << "("
+
+      io << "name: "
+      name.inspect(io)
+      io << ", "
+
+      io << "real_index: "
+      real_index.inspect(io)
+      io << ", "
+
+      io << "height: "
+      height.inspect(io)
+      io << ", "
+
+      io << "flag: "
+      flag.inspect(io)
+      io << ", "
+
+      io << "color: "
+      color.inspect(io)
+      io << ", "
+
+      io << "bold: "
+      bold.inspect(io)
+      io << ", "
+
+      io << "escapement: "
+      escapement.inspect(io)
+      io << ", "
+
+      io << "underline: "
+      underline.inspect(io)
+      io << ", "
+
+      io << "family: "
+      family.inspect(io)
+      io << ", "
+
+      io << "charset: "
+      charset.inspect(io)
+
+      io << ")"
+    end
+
+    def inspect(io : IO) : Nil
+      to_s(io)
     end
 
     def to_unsafe

@@ -6,7 +6,7 @@ require "../src/xls"
 Xls::Spreadsheet.open(Path.new(ARGV[0])) do |s|
   s.worksheets.each do |ws|
     s.formats.each do |f|
-      puts "#{f.index} => #{f.value}"
+      puts f
     end
   end
 end
