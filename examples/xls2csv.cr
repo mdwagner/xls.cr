@@ -6,7 +6,7 @@ require "../src/xls"
 Xls::Spreadsheet.open(Path.new(ARGV[0])) do |s|
   s.worksheets.each do |ws|
     ws.rows.each do |row|
-      row.cells.each do |cell|
+      row.cells.each_with_index do |cell, index|
         value = cell.value
         if str = value.as_s?
           if str.includes?(",")
@@ -17,7 +17,9 @@ Xls::Spreadsheet.open(Path.new(ARGV[0])) do |s|
         else
           print cell.value.raw
         end
-        print ","
+        unless index == row.cells.size - 1
+          print ","
+        end
       end
       print "\n"
     end
