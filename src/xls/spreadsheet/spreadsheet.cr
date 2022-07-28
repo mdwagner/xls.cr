@@ -233,7 +233,7 @@ class Xls::Spreadsheet
     @xfs ||= begin
       raw_xfs = @workbook.value.xfs
       raw_xfs.xf.to_slice(raw_xfs.count).each.map do |xf|
-        Xf.new(xf)
+        Xf.new(xf, self)
       end.to_a
     end
   end
