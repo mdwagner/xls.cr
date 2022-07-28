@@ -15,6 +15,32 @@ class Xls::Worksheet
       def no_outline? : Bool
         columns_outline_level == 0
       end
+
+      def to_s(io : IO) : Nil
+        io << self.class.name
+        io << "("
+
+        io << "columns_hidden?: "
+        columns_hidden?.inspect(io)
+        io << ", "
+
+        io << "columns_collapsed?: "
+        columns_collapsed?.inspect(io)
+        io << ", "
+
+        io << "columns_outline_level: "
+        columns_outline_level.inspect(io)
+        io << ", "
+
+        io << "no_outline?: "
+        no_outline?.inspect(io)
+
+        io << ")"
+      end
+
+      def inspect(io : IO) : Nil
+        to_s(io)
+      end
     end
 
     protected def initialize(@colinfo : LibXls::StColInfoData)
@@ -47,6 +73,36 @@ class Xls::Worksheet
         columns_outline_level: @colinfo.flags.bits(8..10),
         columns_collapsed: @colinfo.flags.bit(12) == 1
       )
+    end
+
+    def to_s(io : IO) : Nil
+      io << self.class.name
+      io << "("
+
+      io << "first: "
+      first.inspect(io)
+      io << ", "
+
+      io << "last: "
+      last.inspect(io)
+      io << ", "
+
+      io << "width: "
+      width.inspect(io)
+      io << ", "
+
+      io << "xf: "
+      xf.inspect(io)
+      io << ", "
+
+      io << "flags: "
+      flags.inspect(io)
+
+      io << ")"
+    end
+
+    def inspect(io : IO) : Nil
+      to_s(io)
     end
 
     def to_unsafe

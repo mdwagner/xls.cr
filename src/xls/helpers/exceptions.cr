@@ -2,21 +2,18 @@ module Xls
   class FileNotFound < Exception
   end
 
-  class WorksheetParserException < Exception
+  abstract class BaseException < Exception
     def initialize(err : LibXls::XlsError)
       super(Xls::Utils.internal_err_to_str(err))
     end
   end
 
-  class Error < Exception
-    def initialize(err : LibXls::XlsError)
-      super(Xls::Utils.internal_err_to_str(err))
-    end
+  class WorksheetParserException < BaseException
   end
 
-  class WorkbookParserException < Exception
-    def initialize(err : LibXls::XlsError)
-      super(Xls::Utils.internal_err_to_str(err))
-    end
+  class Error < BaseException
+  end
+
+  class WorkbookParserException < BaseException
   end
 end

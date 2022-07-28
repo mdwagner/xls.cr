@@ -10,6 +10,28 @@ class Xls::Worksheet
       def is_default_height? : Bool
         default_height
       end
+
+      def to_s(io : IO) : Nil
+        io << self.class.name
+        io << "("
+
+        io << "height: "
+        height.inspect(io)
+        io << ", "
+
+        io << "is_default_height?: "
+        is_default_height?.inspect(io)
+        io << ", "
+
+        io << "is_custom_height?: "
+        is_custom_height?.inspect(io)
+
+        io << ")"
+      end
+
+      def inspect(io : IO) : Nil
+        to_s(io)
+      end
     end
 
     @cells : Array(Cell)?
@@ -52,6 +74,36 @@ class Xls::Worksheet
     # TODO: link
     def xf : UInt16
       @row.xf
+    end
+
+    def to_s(io : IO) : Nil
+      io << self.class.name
+      io << "("
+
+      io << "index: "
+      index.inspect(io)
+      io << ", "
+
+      io << "fcell: "
+      fcell.inspect(io)
+      io << ", "
+
+      io << "lcell: "
+      lcell.inspect(io)
+      io << ", "
+
+      io << "height: "
+      height.inspect(io)
+      io << ", "
+
+      io << "xf: "
+      xf.inspect(io)
+
+      io << ")"
+    end
+
+    def inspect(io : IO) : Nil
+      to_s(io)
     end
 
     def to_unsafe

@@ -77,6 +77,36 @@ class Xls::Worksheet
     @worksheet.value.defcolwidth
   end
 
+  def to_s(io : IO) : Nil
+    io << self.class.name
+    io << "("
+
+    io << "name: "
+    name.inspect(io)
+    io << ", "
+
+    io << "sheet_visibility: "
+    sheet_visibility.inspect(io)
+    io << ", "
+
+    io << "sheet_type: "
+    sheet_type.inspect(io)
+    io << ", "
+
+    io << "sheet_filepos: "
+    sheet_filepos.inspect(io)
+    io << ", "
+
+    io << "defcolwidth: "
+    defcolwidth.inspect(io)
+
+    io << ")"
+  end
+
+  def inspect(io : IO) : Nil
+    to_s(io)
+  end
+
   def to_unsafe
     @worksheet
   end

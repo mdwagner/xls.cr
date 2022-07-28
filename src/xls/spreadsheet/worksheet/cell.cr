@@ -1,12 +1,12 @@
 class Xls::Worksheet
   class Cell
     struct Error
-      def to_s(io)
-        io << "Cell::Error"
+      def to_s(io : IO) : Nil
+        io << self.class.name
       end
 
-      def inspect(io)
-        io << "Cell::Error"
+      def inspect(io : IO) : Nil
+        to_s(io)
       end
     end
 
@@ -16,6 +16,20 @@ class Xls::Worksheet
       getter raw : Type
 
       def initialize(@raw)
+      end
+
+      def to_s(io : IO) : Nil
+        io << self.class.name
+        io << "("
+
+        io << "raw: "
+        raw.inspect(io)
+
+        io << ")"
+      end
+
+      def inspect(io : IO) : Nil
+        to_s(io)
       end
 
       # Checks that the underlying value is `Nil`, and returns `nil`
@@ -98,6 +112,44 @@ class Xls::Worksheet
     # See `Xls::Worksheet#defcolwidth`
     def width : UInt16
       @cell.width
+    end
+
+    def to_s(io : IO) : Nil
+      io << self.class.name
+      io << "("
+
+      io << "id: "
+      id.inspect(io)
+      io << ", "
+
+      io << "row: "
+      row.inspect(io)
+      io << ", "
+
+      io << "col: "
+      col.inspect(io)
+      io << ", "
+
+      io << "xf: "
+      xf.inspect(io)
+      io << ", "
+
+      io << "width: "
+      width.inspect(io)
+      io << ", "
+
+      io << "is_hidden?: "
+      is_hidden?.inspect(io)
+      io << ", "
+
+      io << "value: "
+      value.inspect(io)
+
+      io << ")"
+    end
+
+    def inspect(io : IO) : Nil
+      to_s(io)
     end
 
     def to_unsafe

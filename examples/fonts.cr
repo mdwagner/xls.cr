@@ -4,9 +4,7 @@ require "../src/xls"
 #
 # Usage: [program] <xls file path>
 Xls::Spreadsheet.open(Path.new(ARGV[0])) do |s|
-  s.worksheets.each do |ws|
-    s.fonts.each do |f|
-      puts f
-    end
+  s.fonts.each do |f|
+    puts f
   end
 end
