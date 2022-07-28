@@ -151,6 +151,36 @@ class Xls::Spreadsheet
     Xls::Utils.ptr_to_str(@workbook.value.docSummary)
   end
 
+  def to_s(io : IO) : Nil
+    io << self.class.name
+    io << "("
+
+    io << "charset: "
+    charset.inspect(io)
+    io << ", "
+
+    io << "summary: "
+    summary.inspect(io)
+    io << ", "
+
+    io << "doc_summary: "
+    doc_summary.inspect(io)
+    io << ", "
+
+    io << "codepage: "
+    codepage.inspect(io)
+    io << ", "
+
+    io << "closed?: "
+    closed?.inspect(io)
+
+    io << ")"
+  end
+
+  def inspect(io : IO) : Nil
+    to_s(io)
+  end
+
   def to_unsafe
     @workbook
   end
