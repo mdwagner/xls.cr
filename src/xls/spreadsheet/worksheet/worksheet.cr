@@ -15,6 +15,8 @@ class Xls::Worksheet
     VisualBasicModule = 6
   end
 
+  include InspectableMethods
+
   @columns : Array(ColumnInfo)?
   @rows : Array(Row)?
 
@@ -25,6 +27,7 @@ class Xls::Worksheet
   end
 
   # Returns the name of the worksheet
+  @[Inspectable]
   def name : String
     Xls::Utils.ptr_to_str(@sheet.name)
   end
@@ -48,16 +51,19 @@ class Xls::Worksheet
   end
 
   # Returns the worksheet visibility
+  @[Inspectable]
   def sheet_visibility : SheetState
     SheetState.from_value(@sheet.visibility)
   end
 
   # Returns the worksheet type
+  @[Inspectable]
   def sheet_type : SheetType
     SheetType.from_value(@sheet.type)
   end
 
   # Returns the absolute stream position of the BOF record of the sheet represented by this record
+  @[Inspectable]
   def sheet_filepos : UInt32
     sheet_filepos = @sheet.filepos
     worksheet_filepos = @worksheet.value.filepos
@@ -73,38 +79,9 @@ class Xls::Worksheet
   # Returns the default column width for columns that do not have a specific width already set
   #
   # Column width in characters, using the width of the zero character from default font (first FONT record in the file).
+  @[Inspectable]
   def defcolwidth : UInt16
     @worksheet.value.defcolwidth
-  end
-
-  def to_s(io : IO) : Nil
-    io << self.class.name
-    io << "("
-
-    io << "name: "
-    name.inspect(io)
-    io << ", "
-
-    io << "sheet_visibility: "
-    sheet_visibility.inspect(io)
-    io << ", "
-
-    io << "sheet_type: "
-    sheet_type.inspect(io)
-    io << ", "
-
-    io << "sheet_filepos: "
-    sheet_filepos.inspect(io)
-    io << ", "
-
-    io << "defcolwidth: "
-    defcolwidth.inspect(io)
-
-    io << ")"
-  end
-
-  def inspect(io : IO) : Nil
-    to_s(io)
   end
 
   def to_unsafe

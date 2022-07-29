@@ -6,33 +6,9 @@ class Xls::Worksheet
       def is_custom_height? : Bool
         !default_height
       end
-
-      def is_default_height? : Bool
-        default_height
-      end
-
-      def to_s(io : IO) : Nil
-        io << self.class.name
-        io << "("
-
-        io << "height: "
-        height.inspect(io)
-        io << ", "
-
-        io << "is_default_height?: "
-        is_default_height?.inspect(io)
-        io << ", "
-
-        io << "is_custom_height?: "
-        is_custom_height?.inspect(io)
-
-        io << ")"
-      end
-
-      def inspect(io : IO) : Nil
-        to_s(io)
-      end
     end
+
+    include InspectableMethods
 
     @cells : Array(Cell)?
 
@@ -40,6 +16,7 @@ class Xls::Worksheet
     end
 
     # Returns the index of this `Xls::Worksheet::Row` in the `Xls::Worksheet`
+    @[Inspectable]
     def index
       @row.index
     end
@@ -54,16 +31,19 @@ class Xls::Worksheet
     end
 
     # Returns the index to the column of the first cell which is described by a cell record
+    @[Inspectable]
     def fcell : UInt16
       @row.fcell
     end
 
     # Returns the index to the column of the last cell which is described by a cell record, increased by 1
+    @[Inspectable]
     def lcell : UInt16
       @row.lcell
     end
 
     # Returns the height of the row (represented as `Xls::Worksheet::Row::Height`), in twips = 1/20 of a point
+    @[Inspectable]
     def height : Height
       Height.new(
         height: @row.height.bits(0..14),
@@ -73,32 +53,6 @@ class Xls::Worksheet
 
     def xf?(spreadsheet : Spreadsheet) : Spreadsheet::Xf?
       spreadsheet.xfs[@row.xf]?
-    end
-
-    def to_s(io : IO) : Nil
-      io << self.class.name
-      io << "("
-
-      io << "index: "
-      index.inspect(io)
-      io << ", "
-
-      io << "fcell: "
-      fcell.inspect(io)
-      io << ", "
-
-      io << "lcell: "
-      lcell.inspect(io)
-      io << ", "
-
-      io << "height: "
-      height.inspect(io)
-
-      io << ")"
-    end
-
-    def inspect(io : IO) : Nil
-      to_s(io)
     end
 
     def to_unsafe

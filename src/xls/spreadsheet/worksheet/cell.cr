@@ -11,25 +11,16 @@ class Xls::Worksheet
     end
 
     struct Any
+      include InspectableMethods
+
       alias Type = Nil | Bool | Float64 | String | Error
 
-      getter raw : Type
-
-      def initialize(@raw)
+      def initialize(@raw : Type)
       end
 
-      def to_s(io : IO) : Nil
-        io << self.class.name
-        io << "("
-
-        io << "raw: "
-        raw.inspect(io)
-
-        io << ")"
-      end
-
-      def inspect(io : IO) : Nil
-        to_s(io)
+      @[Inspectable]
+      def raw
+        @raw
       end
 
       # Checks that the underlying value is `Nil`, and returns `nil`
@@ -87,19 +78,24 @@ class Xls::Worksheet
       end
     end
 
+    include InspectableMethods
+
     @value : Any?
 
     protected def initialize(@cell : LibXls::StCellData)
     end
 
+    @[Inspectable]
     def id : XlsRecord
       XlsRecord.from_value(@cell.id)
     end
 
+    @[Inspectable]
     def row : UInt16
       @cell.row
     end
 
+    @[Inspectable]
     def col : UInt16
       @cell.col
     end
@@ -109,49 +105,13 @@ class Xls::Worksheet
     end
 
     # See `Xls::Worksheet#defcolwidth`
+    @[Inspectable]
     def width : UInt16
       @cell.width
     end
 
-    def to_s(io : IO) : Nil
-      io << self.class.name
-      io << "("
-
-      io << "id: "
-      id.inspect(io)
-      io << ", "
-
-      io << "row: "
-      row.inspect(io)
-      io << ", "
-
-      io << "col: "
-      col.inspect(io)
-      io << ", "
-
-      io << "width: "
-      width.inspect(io)
-      io << ", "
-
-      io << "is_hidden?: "
-      is_hidden?.inspect(io)
-      io << ", "
-
-      io << "value: "
-      value.inspect(io)
-
-      io << ")"
-    end
-
-    def inspect(io : IO) : Nil
-      to_s(io)
-    end
-
-    def to_unsafe
-      pointerof(@cell)
-    end
-
     # Returns whether this cell is hidden
+    @[Inspectable]
     def is_hidden? : Bool
       @cell.isHidden == 1
     end
@@ -171,6 +131,7 @@ class Xls::Worksheet
     # Returns the value of this cell as `Xls::Worksheet::Cell::Any`
     #
     # You must invoke `Xls::Worksheet::Cell::Any#raw` to get the raw value.
+    @[Inspectable]
     def value : Any
       @value ||= begin
         case id
@@ -189,6 +150,10 @@ class Xls::Worksheet
 
         Any.new(nil)
       end
+    end
+
+    def to_unsafe
+      pointerof(@cell)
     end
   end
 end

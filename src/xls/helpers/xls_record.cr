@@ -1,13 +1,9 @@
 module Xls
   {% begin %}
-  {%
-    constants = LibXls.constants.select do |constant|
-      constant.starts_with?("XLS_RECORD")
-    end
-  %}
+    {% constants = LibXls.constants.select &.starts_with?("XLS_RECORD") %}
     enum XlsRecord
-      {% for constant in constants %}
-      {{ constant.gsub(/^XLS\_/, "").capitalize.camelcase.id }} = LibXls::{{ constant.id }}
+      {% for c in constants %}
+      {{ c.gsub(/^XLS\_/, "").capitalize.camelcase.id }} = LibXls::{{ c.id }}
       {% end %}
     end
   {% end %}

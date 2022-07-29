@@ -1,5 +1,7 @@
 class Xls::Spreadsheet
   class Font
+    include InspectableMethods
+
     getter real_index : UInt32
 
     protected def initialize(
@@ -8,11 +10,13 @@ class Xls::Spreadsheet
     )
     end
 
+    @[Inspectable]
     def name : String
       Xls::Utils.ptr_to_str(@font.name)
     end
 
     # Returns the height of the font (in twips = 1/20 of a point)
+    @[Inspectable]
     def height : UInt16
       @font.height
     end
@@ -25,50 +29,9 @@ class Xls::Spreadsheet
       outlined : Bool,
       shadowed : Bool,
       condensed : Bool,
-      extended : Bool do
-      def to_s(io : IO) : Nil
-        io << self.class.name
-        io << "("
+      extended : Bool
 
-        io << "bold: "
-        bold.inspect(io)
-        io << ", "
-
-        io << "italic: "
-        italic.inspect(io)
-        io << ", "
-
-        io << "underlined: "
-        underlined.inspect(io)
-        io << ", "
-
-        io << "struck_out: "
-        struck_out.inspect(io)
-        io << ", "
-
-        io << "outlined: "
-        outlined.inspect(io)
-        io << ", "
-
-        io << "shadowed: "
-        shadowed.inspect(io)
-        io << ", "
-
-        io << "condensed: "
-        condensed.inspect(io)
-        io << ", "
-
-        io << "extended: "
-        extended.inspect(io)
-
-        io << ")"
-      end
-
-      def inspect(io : IO) : Nil
-        to_s(io)
-      end
-    end
-
+    @[Inspectable]
     def flag : OptionFlags
       OptionFlags.new(
         bold: @font.flag.bit(0) == 1,
@@ -94,18 +57,22 @@ class Xls::Spreadsheet
       Automatic  = 0x7FFF
     end
 
+    @[Inspectable]
     def color : FontColor
       FontColor.from_value(@font.color)
     end
 
+    @[Inspectable]
     def bold : UInt16
       @font.bold
     end
 
+    @[Inspectable]
     def standard_font_weight? : Bool
       bold == 400
     end
 
+    @[Inspectable]
     def bold_font_weight? : Bool
       bold == 700
     end
@@ -116,6 +83,7 @@ class Xls::Spreadsheet
       Subscript
     end
 
+    @[Inspectable]
     def escapement : FontEscapement
       FontEscapement.from_value(@font.escapement)
     end
@@ -128,6 +96,7 @@ class Xls::Spreadsheet
       DoubleAccounting = 0x22
     end
 
+    @[Inspectable]
     def underline : FontUnderline
       FontUnderline.from_value(@font.underline)
     end
@@ -141,6 +110,7 @@ class Xls::Spreadsheet
       Decorative # specialised
     end
 
+    @[Inspectable]
     def family : FontFamily
       FontFamily.from_value(@font.family)
     end
@@ -167,58 +137,9 @@ class Xls::Spreadsheet
       OemLatin1                  = 0xFF
     end
 
+    @[Inspectable]
     def charset : FontCharset
       FontCharset.from_value(@font.charset)
-    end
-
-    def to_s(io : IO) : Nil
-      io << self.class.name
-      io << "("
-
-      io << "name: "
-      name.inspect(io)
-      io << ", "
-
-      io << "real_index: "
-      real_index.inspect(io)
-      io << ", "
-
-      io << "height: "
-      height.inspect(io)
-      io << ", "
-
-      io << "flag: "
-      flag.inspect(io)
-      io << ", "
-
-      io << "color: "
-      color.inspect(io)
-      io << ", "
-
-      io << "bold: "
-      bold.inspect(io)
-      io << ", "
-
-      io << "escapement: "
-      escapement.inspect(io)
-      io << ", "
-
-      io << "underline: "
-      underline.inspect(io)
-      io << ", "
-
-      io << "family: "
-      family.inspect(io)
-      io << ", "
-
-      io << "charset: "
-      charset.inspect(io)
-
-      io << ")"
-    end
-
-    def inspect(io : IO) : Nil
-      to_s(io)
     end
 
     def to_unsafe

@@ -62,6 +62,8 @@ class Xls::Spreadsheet
     new(wb, error)
   end
 
+  include InspectableMethods
+
   @validated : Bool?
   @closed : Bool?
   @worksheets : Array(Worksheet)?
@@ -104,6 +106,7 @@ class Xls::Spreadsheet
   end
 
   # Checks if the `Xls::Spreadsheet` is closed
+  @[Inspectable]
   def closed? : Bool
     @closed == true
   end
@@ -137,57 +140,27 @@ class Xls::Spreadsheet
   end
 
   # Returns the encoding of the spreadsheet
+  @[Inspectable]
   def charset : String
     Xls::Utils.ptr_to_str(@workbook.value.charset)
   end
 
   # Returns the *Summary* of the spreadsheet
+  @[Inspectable]
   def summary : String
     Xls::Utils.ptr_to_str(@workbook.value.summary)
   end
 
   # Returns the *Document Summary* of the spreadsheet
+  @[Inspectable]
   def doc_summary : String
     Xls::Utils.ptr_to_str(@workbook.value.docSummary)
-  end
-
-  def to_s(io : IO) : Nil
-    io << self.class.name
-    io << "("
-
-    io << "charset: "
-    charset.inspect(io)
-    io << ", "
-
-    io << "summary: "
-    summary.inspect(io)
-    io << ", "
-
-    io << "doc_summary: "
-    doc_summary.inspect(io)
-    io << ", "
-
-    io << "codepage: "
-    codepage.inspect(io)
-    io << ", "
-
-    io << "closed?: "
-    closed?.inspect(io)
-
-    io << ")"
-  end
-
-  def inspect(io : IO) : Nil
-    to_s(io)
-  end
-
-  def to_unsafe
-    @workbook
   end
 
   # Returns the text encoding used to write byte strings, stored as MS Windows code page identifier
   #
   # For more information see https://en.wikipedia.org/wiki/Character_encoding.
+  @[Inspectable]
   def codepage : UInt16
     @workbook.value.codepage
   end
@@ -236,5 +209,9 @@ class Xls::Spreadsheet
         Xf.new(xf, self)
       end.to_a
     end
+  end
+
+  def to_unsafe
+    @workbook
   end
 end
