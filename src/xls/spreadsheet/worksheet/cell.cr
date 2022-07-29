@@ -104,9 +104,8 @@ class Xls::Worksheet
       @cell.col
     end
 
-    # See `Xls::Worksheet::ColumnInfo#xf`
-    def xf : UInt16
-      @cell.xf
+    def xf?(spreadsheet : Spreadsheet) : Spreadsheet::Xf?
+      spreadsheet.xfs[@cell.xf]?
     end
 
     # See `Xls::Worksheet#defcolwidth`
@@ -128,10 +127,6 @@ class Xls::Worksheet
 
       io << "col: "
       col.inspect(io)
-      io << ", "
-
-      io << "xf: "
-      xf.inspect(io)
       io << ", "
 
       io << "width: "

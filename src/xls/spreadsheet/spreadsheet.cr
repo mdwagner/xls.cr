@@ -237,24 +237,4 @@ class Xls::Spreadsheet
       end.to_a
     end
   end
-
-  def get_xf?(value : Worksheet::ColumnInfo) : Xf?
-    xfs[value.xf]?
-  end
-
-  def get_xf?(value : Worksheet::Cell) : Xf?
-    xfs[value.xf]?
-  end
-
-  def get_xf?(value : Worksheet::Row) : Xf?
-    xfs[value.xf]?
-  end
-
-  def get_font?(value : Xf) : Font?
-    fonts.find { |font| font.real_index == value.font }
-  end
-
-  def get_format?(value : Xf) : Format?
-    formats[value.format]?
-  end
 end

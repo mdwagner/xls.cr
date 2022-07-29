@@ -71,9 +71,8 @@ class Xls::Worksheet
       )
     end
 
-    # TODO: link
-    def xf : UInt16
-      @row.xf
+    def xf?(spreadsheet : Spreadsheet) : Spreadsheet::Xf?
+      spreadsheet.xfs[@row.xf]?
     end
 
     def to_s(io : IO) : Nil
@@ -94,10 +93,6 @@ class Xls::Worksheet
 
       io << "height: "
       height.inspect(io)
-      io << ", "
-
-      io << "xf: "
-      xf.inspect(io)
 
       io << ")"
     end

@@ -1,19 +1,15 @@
 class Xls::Spreadsheet
-  # TODO: Incomplete
-  #
   # See http://sc.openoffice.org/excelfileformat.pdf, page 224
   class Xf
     def initialize(@xf : LibXls::StXfData, @spreadsheet : Spreadsheet)
     end
 
-    # Returns index to FONT record
-    def font : UInt16
-      @xf.font
+    def font? : Font?
+      @spreadsheet.fonts.find { |font| font.real_index == @xf.font }
     end
 
-    # Returns index to FORMAT record
-    def format : UInt16
-      @xf.format
+    def format? : Format?
+      @spreadsheet.formats[@xf.format]?
     end
 
     enum Type : UInt16
@@ -37,7 +33,7 @@ class Xls::Spreadsheet
         Type.from_value(cell_protection.bit(2))
       end
 
-      def parent_xf : UInt16
+      def parent_xf_index : UInt16
         @type.bits(4..15)
       end
 
@@ -61,8 +57,8 @@ class Xls::Spreadsheet
         type.inspect(io)
         io << ", "
 
-        io << "parent_xf: "
-        parent_xf.inspect(io)
+        io << "parent_xf_index: 0x"
+        parent_xf_index.to_s(io: io, base: 16, precision: 3, upcase: true)
 
         io << ")"
       end
@@ -254,7 +250,7 @@ class Xls::Spreadsheet
 
       case type.type
       in .cell?
-        parent_used_attrs = @spreadsheet.xfs[type.parent_xf].get_used_attrs_validity
+        parent_used_attrs = @spreadsheet.xfs[type.parent_xf_index].get_used_attrs_validity
         UsedAttributesValidity.new(
           number_format: current_used_attrs.number_format ? parent_used_attrs.number_format : true,
           font: current_used_attrs.font ? parent_used_attrs.font : true,
@@ -279,35 +275,186 @@ class Xls::Spreadsheet
       )
     end
 
-    # Returns line style
-    def line_style
-      # linestyle, uint32
-      {% raise "not implemented" %}
+    enum LineStyle : UInt8
+      NoLine
+      Thin
+      Medium
+      Dashed
+      Dotted
+      Thick
+      Double
+      Hair
+      MediumDashed
+      ThinDashDotted
+      MediumDashDotted
+      ThinDashDotDotted
+      MediumDashDotDotted
+      SlantedMediumDashDotted
     end
 
-    # Returns line color
-    def line_color
-      # linecolor, uint32
-      {% raise "not implemented" %}
+    struct BorderLineBackground
+      def initialize(
+        @line_style : UInt32,
+        @line_color : UInt32,
+        @background_color : UInt16
+      )
+      end
+
+      def left_line_style : LineStyle
+        LineStyle.from_value(@line_style.bits(0..3))
+      end
+
+      def right_line_style : LineStyle
+        LineStyle.from_value(@line_style.bits(4..7))
+      end
+
+      def top_line_style : LineStyle
+        LineStyle.from_value(@line_style.bits(8..11))
+      end
+
+      def bottom_line_style : LineStyle
+        LineStyle.from_value(@line_style.bits(12..15))
+      end
+
+      # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
+      def left_line_color_index
+        @line_style.bits(16..22)
+      end
+
+      # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
+      def right_line_color_index
+        @line_style.bits(23..29)
+      end
+
+      # Diagonal line from top left to right bottom
+      def diag_from_top_left?
+        @line_style.bit(30) == 1
+      end
+
+      # Diagonal line from bottom left to right top
+      def diag_from_bottom_left?
+        @line_style.bit(31) == 1
+      end
+
+      # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
+      def top_line_color_index
+        @line_color.bits(0..6)
+      end
+
+      # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
+      def bottom_line_color_index
+        @line_color.bits(7..13)
+      end
+
+      # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
+      def diag_line_color_index
+        @line_color.bits(14..20)
+      end
+
+      # Diagonal line style
+      def diag_line_style : LineStyle
+        LineStyle.from_value(@line_color.bits(21..24))
+      end
+
+      def fill_pattern : LineStyle
+        LineStyle.from_value(@line_color.bits(26..31))
+      end
+
+      # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
+      def pattern_color_index
+        @background_color.bits(0..6)
+      end
+
+      # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
+      def pattern_background_color_index
+        @background_color.bits(7..13)
+      end
+
+      def to_s(io : IO) : Nil
+        io << self.class.name
+        io << "("
+
+        io << "left_line_style: "
+        left_line_style.inspect(io)
+        io << ", "
+
+        io << "right_line_style: "
+        right_line_style.inspect(io)
+        io << ", "
+
+        io << "top_line_style: "
+        top_line_style.inspect(io)
+        io << ", "
+
+        io << "bottom_line_style: "
+        bottom_line_style.inspect(io)
+        io << ", "
+
+        io << "left_line_color_index: 0x"
+        left_line_color_index.to_s(io: io, base: 16, precision: 2, upcase: true)
+        io << ", "
+
+        io << "right_line_color_index: 0x"
+        right_line_color_index.to_s(io: io, base: 16, precision: 2, upcase: true)
+        io << ", "
+
+        io << "diag_from_top_left?: "
+        diag_from_top_left?.inspect(io)
+        io << ", "
+
+        io << "diag_from_bottom_left?: "
+        diag_from_bottom_left?.inspect(io)
+        io << ", "
+
+        io << "top_line_color_index: 0x"
+        top_line_color_index.to_s(io: io, base: 16, precision: 2, upcase: true)
+        io << ", "
+
+        io << "bottom_line_color_index: 0x"
+        bottom_line_color_index.to_s(io: io, base: 16, precision: 2, upcase: true)
+        io << ", "
+
+        io << "diag_line_color_index: 0x"
+        diag_line_color_index.to_s(io: io, base: 16, precision: 2, upcase: true)
+        io << ", "
+
+        io << "diag_line_style: "
+        diag_line_style.inspect(io)
+        io << ", "
+
+        io << "fill_pattern: "
+        fill_pattern.inspect(io)
+        io << ", "
+
+        io << "pattern_color_index: 0x"
+        pattern_color_index.to_s(io: io, base: 16, precision: 2, upcase: true)
+        io << ", "
+
+        io << "pattern_background_color_index: 0x"
+        pattern_background_color_index.to_s(io: io, base: 16, precision: 2, upcase: true)
+
+        io << ")"
+      end
+
+      def inspect(io : IO) : Nil
+        to_s(io)
+      end
     end
 
-    # Returns background color
-    def background_color
-      # groundcolor, uint16
-      {% raise "not implemented" %}
+    def border_line_background : BorderLineBackground
+      BorderLineBackground.new(@xf.linestyle, @xf.linecolor, @xf.groundcolor)
     end
 
-    # TODO: show not implemented methods when implemented
     def to_s(io : IO) : Nil
       io << self.class.name
       io << "("
 
       io << "font: "
-      font.inspect(io)
+      font?.inspect(io)
       io << ", "
 
       io << "format: "
-      format.inspect(io)
+      format?.inspect(io)
       io << ", "
 
       io << "type: "
@@ -328,6 +475,10 @@ class Xls::Spreadsheet
 
       io << "used_attrs: "
       used_attrs.inspect(io)
+      io << ", "
+
+      io << "border_line_background: "
+      border_line_background.inspect(io)
 
       io << ")"
     end

@@ -61,9 +61,9 @@ class Xls::Worksheet
       @colinfo.width
     end
 
-    # Returns the index to the XF record for default column formatting
-    def xf : UInt16
-      @colinfo.xf
+    # Returns the XF record for default column formatting
+    def xf?(spreadsheet : Spreadsheet) : Spreadsheet::Xf?
+      spreadsheet.xfs[@colinfo.xf]?
     end
 
     # Returns option flags
@@ -89,10 +89,6 @@ class Xls::Worksheet
 
       io << "width: "
       width.inspect(io)
-      io << ", "
-
-      io << "xf: "
-      xf.inspect(io)
       io << ", "
 
       io << "flags: "
