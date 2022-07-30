@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: crystallang/crystal:1.4.1-alpine
+      image: crystallang/crystal:1.4.1
 
     steps:
       - name: Checkout
@@ -32,19 +32,28 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v1
 
-      - name: Install OS dependencies
-        run: apk --no-cache add bash
-
       - name: Install dependencies
         run: shards install
 
       - name: Generate docs
         run: crystal docs
 
+      - name: Archive artifact
+        shell: bash
+        run: |
+          tar \
+            --dereference --hard-dereference \
+            --directory docs \
+            -cvf artifact.tar \
+            --exclude=.git \
+            --exclude=.github \
+            .
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-artifact@main
         with:
-          path: "docs"
+          name: github-pages
+          path: artifact.tar
+          retention-days: 1
 
   # Deployment job
   deploy:
