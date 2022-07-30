@@ -10,7 +10,7 @@ Crystal bindings to [libxls](https://github.com/libxls/libxls)
    dependencies:
      xls:
        github: mdwagner/xls.cr
-       version: 0.3.0
+       version: 0.4.0
    ```
 
 2. Run `shards install`
