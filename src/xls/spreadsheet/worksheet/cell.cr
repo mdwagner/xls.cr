@@ -1,7 +1,7 @@
 class Xls::Worksheet
   class Cell
     # See http://sc.openoffice.org/excelfileformat.pdf, page 21
-    enum CellError : UInt16
+    enum CellError : UInt8
       # Intersection of two cell ranges is empty
       Null
       # Division by zero
@@ -28,13 +28,13 @@ class Xls::Worksheet
       end
 
       @[Inspectable]
-      def raw
-        @raw
+      protected def type
+        @raw.class
       end
 
       @[Inspectable]
-      protected def type
-        @raw.class
+      def raw
+        @raw
       end
 
       # Checks that the underlying value is `Nil`, and returns `nil`
@@ -154,7 +154,7 @@ class Xls::Worksheet
           when "bool"
             return Any.new(raw_double > 0)
           when "error"
-            return Any.new(CellError.from_value(raw_double.to_u16))
+            return Any.new(CellError.from_value(raw_double.to_u8))
           end
         when .record_number?, .record_rk?
           return Any.new(raw_double)
