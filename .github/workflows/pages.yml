@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: crystallang/crystal:1.4.1-alpine
+      image: crystallang/crystal:1.4.1
 
     environment:
       name: github-pages
@@ -34,7 +34,7 @@ jobs:
 
       # TODO: Not sure if still needed
       - name: Install OS dependencies
-        run: apk --no-cache add rsync bash
+        run: apt-get install -y rsync
 
       - name: Install dependencies
         run: shards install
