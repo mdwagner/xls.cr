@@ -24,7 +24,7 @@ class Xls::Worksheet
 
       alias Type = Nil | Bool | Float64 | String | CellError
 
-      def initialize(@raw : Type)
+      protected def initialize(@raw : Type)
       end
 
       @[Inspectable]
