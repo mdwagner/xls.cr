@@ -1,9 +1,28 @@
 class Xls::Worksheet
+  # See http://sc.openoffice.org/excelfileformat.pdf, page 146
   class ColumnInfo
-    record OptionFlags,
-      columns_hidden : Bool,
-      columns_outline_level : UInt16,
-      columns_collapsed : Bool do
+    struct OptionFlags
+      include InspectableMethods
+
+      protected def initialize(@flags : UInt16)
+      end
+
+      @[Inspectable]
+      def columns_hidden? : Bool
+        @flags.bit(0) == 1
+      end
+
+      @[Inspectable]
+      def columns_collapsed? : Bool
+        @flags.bit(12) == 1
+      end
+
+      @[Inspectable]
+      def columns_outline_level : UInt16
+        @flags.bits(8..10)
+      end
+
+      @[Inspectable]
       def no_outline? : Bool
         columns_outline_level == 0
       end
@@ -32,19 +51,15 @@ class Xls::Worksheet
       @colinfo.width
     end
 
-    # Returns the XF record for default column formatting
-    def xf?(spreadsheet : Spreadsheet) : Spreadsheet::Xf?
-      spreadsheet.xfs[@colinfo.xf]?
+    # Returns the `Xls::Spreadsheet::Xf` for default column formatting
+    def xf(spreadsheet : Spreadsheet) : Spreadsheet::Xf
+      spreadsheet.xfs[@colinfo.xf]
     end
 
     # Returns option flags
     @[Inspectable]
     def flags : OptionFlags
-      OptionFlags.new(
-        columns_hidden: @colinfo.flags.bit(0) == 1,
-        columns_outline_level: @colinfo.flags.bits(8..10),
-        columns_collapsed: @colinfo.flags.bit(12) == 1
-      )
+      OptionFlags.new(@colinfo.flags)
     end
 
     def to_unsafe

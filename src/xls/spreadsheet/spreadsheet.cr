@@ -172,6 +172,7 @@ class Xls::Spreadsheet
   #
   # The font with index 4 is omitted in all BIFF versions.
   # This means the first four fonts have zero-based indexes, and the fifth font and all following fonts are refereced with one-based indexes.
+  # Use `Xls::Spreadsheet::Font#real_index` to access this particular sequence.
   def fonts : Array(Font)
     @fonts ||= begin
       raw_fonts = @workbook.value.fonts

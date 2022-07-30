@@ -1,13 +1,20 @@
 class Xls::Spreadsheet
+  # See http://sc.openoffice.org/excelfileformat.pdf, page 171
   class Font
     include InspectableMethods
 
-    getter real_index : UInt32
-
     protected def initialize(
       @font : LibXls::StFontData,
-      @real_index
+      @real_index : UInt32
     )
+    end
+
+    # The first 4 indexes are zero-based, the fifth index is omitted, and the following indexes are one-based.
+    #
+    # See `Xls::Spreadsheet#fonts` for more information
+    @[Inspectable]
+    def real_index : UInt32
+      @real_index
     end
 
     @[Inspectable]

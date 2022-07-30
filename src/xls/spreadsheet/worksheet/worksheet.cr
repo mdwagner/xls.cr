@@ -63,7 +63,6 @@ class Xls::Worksheet
   end
 
   # Returns the absolute stream position of the BOF record of the sheet represented by this record
-  @[Inspectable]
   def sheet_filepos : UInt32
     sheet_filepos = @sheet.filepos
     worksheet_filepos = @worksheet.value.filepos

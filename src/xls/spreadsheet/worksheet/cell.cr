@@ -1,19 +1,28 @@
 class Xls::Worksheet
   class Cell
-    struct Error
-      def to_s(io : IO) : Nil
-        io << self.class.name
-      end
-
-      def inspect(io : IO) : Nil
-        to_s(io)
-      end
+    # See http://sc.openoffice.org/excelfileformat.pdf, page 21
+    enum CellError : UInt16
+      # Intersection of two cell ranges is empty
+      Null
+      # Division by zero
+      DivZero = 0x07
+      # Wrong type of operand
+      Value = 0x0F
+      # Illegal or deleted cell reference
+      Ref = 0x17
+      # Wrong function or range name
+      Name = 0x1D
+      # Value range overflow
+      Num = 0x24
+      # Argument or function not available
+      NA = 0x2A
     end
 
+    # See http://sc.openoffice.org/excelfileformat.pdf, page 91
     struct Any
       include InspectableMethods
 
-      alias Type = Nil | Bool | Float64 | String | Error
+      alias Type = Nil | Bool | Float64 | String | CellError
 
       def initialize(@raw : Type)
       end
@@ -21,6 +30,11 @@ class Xls::Worksheet
       @[Inspectable]
       def raw
         @raw
+      end
+
+      @[Inspectable]
+      protected def type
+        @raw.class
       end
 
       # Checks that the underlying value is `Nil`, and returns `nil`
@@ -65,16 +79,16 @@ class Xls::Worksheet
         as_s if @raw.is_a?(String)
       end
 
-      # Checks that the underlying value is `Xls::Worksheet::Cell::Error`, and returns its value
+      # Checks that the underlying value is `Xls::Worksheet::Cell::CellError`, and returns its value
       # Raises otherwise.
-      def as_error : Error
-        @raw.as(Error)
+      def as_cell_error : CellError
+        @raw.as(CellError)
       end
 
-      # Checks that the underlying value is `Xls::Worksheet::Cell::Error`, and returns its value
+      # Checks that the underlying value is `Xls::Worksheet::Cell::CellError`, and returns its value
       # Returns `nil` otherwise.
-      def as_error? : Error?
-        as_error if @raw.is_a?(Error)
+      def as_cell_error? : CellError?
+        as_cell_error if @raw.is_a?(CellError)
       end
     end
 
@@ -140,7 +154,7 @@ class Xls::Worksheet
           when "bool"
             return Any.new(raw_double > 0)
           when "error"
-            return Any.new(Error.new)
+            return Any.new(CellError.from_value(raw_double.to_u16))
           end
         when .record_number?, .record_rk?
           return Any.new(raw_double)

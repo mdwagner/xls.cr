@@ -9,7 +9,7 @@ class Xls::Spreadsheet
     struct TypeProtection
       include InspectableMethods
 
-      def initialize(@type : UInt16)
+      protected def initialize(@type : UInt16)
       end
 
       @[Inspectable]
@@ -59,7 +59,7 @@ class Xls::Spreadsheet
     struct Alignment
       include InspectableMethods
 
-      def initialize(@align : UInt8)
+      protected def initialize(@align : UInt8)
       end
 
       @[Inspectable]
@@ -98,6 +98,7 @@ class Xls::Spreadsheet
       Unknown
     end
 
+    # See http://sc.openoffice.org/excelfileformat.pdf, page 220
     record Rotation, type : RotationType, value : UInt8
 
     enum TextDirection : UInt8
@@ -110,7 +111,7 @@ class Xls::Spreadsheet
     struct Indentation
       include InspectableMethods
 
-      def initialize(@indent : UInt8)
+      protected def initialize(@indent : UInt8)
       end
 
       # Indent level
@@ -165,7 +166,7 @@ class Xls::Spreadsheet
     struct BorderLineBackground
       include InspectableMethods
 
-      def initialize(
+      protected def initialize(
         @line_style : UInt32,
         @line_color : UInt32,
         @background_color : UInt16
@@ -193,13 +194,13 @@ class Xls::Spreadsheet
       end
 
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16, precision: 2)]
+      @[Inspectable(base: 16)]
       def left_line_color_index
         @line_style.bits(16..22)
       end
 
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16, precision: 2)]
+      @[Inspectable(base: 16)]
       def right_line_color_index
         @line_style.bits(23..29)
       end
@@ -217,19 +218,19 @@ class Xls::Spreadsheet
       end
 
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16, precision: 2)]
+      @[Inspectable(base: 16)]
       def top_line_color_index
         @line_color.bits(0..6)
       end
 
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16, precision: 2)]
+      @[Inspectable(base: 16)]
       def bottom_line_color_index
         @line_color.bits(7..13)
       end
 
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16, precision: 2)]
+      @[Inspectable(base: 16)]
       def diag_line_color_index
         @line_color.bits(14..20)
       end
@@ -246,13 +247,13 @@ class Xls::Spreadsheet
       end
 
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16, precision: 2)]
+      @[Inspectable(base: 16)]
       def pattern_color_index
         @background_color.bits(0..6)
       end
 
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16, precision: 2)]
+      @[Inspectable(base: 16)]
       def pattern_background_color_index
         @background_color.bits(7..13)
       end
@@ -260,14 +261,16 @@ class Xls::Spreadsheet
 
     include InspectableMethods
 
-    def initialize(@xf : LibXls::StXfData, @spreadsheet : Spreadsheet)
+    protected def initialize(@xf : LibXls::StXfData, @spreadsheet : Spreadsheet)
     end
 
+    # Returns associated `Xls::Spreadsheet::Font` or nil
     @[Inspectable]
     def font? : Font?
       @spreadsheet.fonts.find { |font| font.real_index == @xf.font }
     end
 
+    # Returns associated `Xls::Spreadsheet::Format` or nil
     @[Inspectable]
     def format? : Format?
       @spreadsheet.formats[@xf.format]?
@@ -281,7 +284,7 @@ class Xls::Spreadsheet
 
     # Returns alignment and text break
     @[Inspectable]
-    def align : Alignment
+    def alignment : Alignment
       Alignment.new(@xf.align)
     end
 
@@ -309,6 +312,8 @@ class Xls::Spreadsheet
     end
 
     # Returns flags for used attribute groups
+    #
+    # Checks for validity on specific groups on this XF record
     @[Inspectable]
     def used_attrs : UsedAttributesValidity
       current_used_attrs = get_used_attrs_validity
@@ -340,6 +345,7 @@ class Xls::Spreadsheet
       )
     end
 
+    # Returns information on border line styles, line colors, and background colors
     @[Inspectable]
     def border_line_background : BorderLineBackground
       BorderLineBackground.new(@xf.linestyle, @xf.linecolor, @xf.groundcolor)

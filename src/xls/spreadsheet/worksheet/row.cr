@@ -1,10 +1,24 @@
 class Xls::Worksheet
   class Row
-    record Height,
-      height : UInt16,
-      default_height : Bool do
+    struct Height
+      include InspectableMethods
+
+      protected def initialize(@height : UInt16)
+      end
+
+      @[Inspectable]
+      def height : UInt16
+        @height.bits(0..14)
+      end
+
+      @[Inspectable]
+      def is_default_height? : Bool
+        @height.bit(15) == 1
+      end
+
+      @[Inspectable]
       def is_custom_height? : Bool
-        !default_height
+        !is_default_height?
       end
     end
 
@@ -32,23 +46,20 @@ class Xls::Worksheet
 
     # Returns the index to the column of the first cell which is described by a cell record
     @[Inspectable]
-    def fcell : UInt16
+    def first_cell_index : UInt16
       @row.fcell
     end
 
     # Returns the index to the column of the last cell which is described by a cell record, increased by 1
     @[Inspectable]
-    def lcell : UInt16
+    def last_cell_index : UInt16
       @row.lcell
     end
 
     # Returns the height of the row (represented as `Xls::Worksheet::Row::Height`), in twips = 1/20 of a point
     @[Inspectable]
     def height : Height
-      Height.new(
-        height: @row.height.bits(0..14),
-        default_height: @row.height.bit(15) == 1
-      )
+      Height.new(@row.height)
     end
 
     def xf?(spreadsheet : Spreadsheet) : Spreadsheet::Xf?
