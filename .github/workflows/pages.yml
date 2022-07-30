@@ -25,6 +25,11 @@ jobs:
     container:
       image: crystallang/crystal:1.4.1
 
+    environment:
+      server_url: ${{ github.server_url }}
+      repository: ${{ github.repository }}
+      refname: ${{ github.ref }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -36,7 +41,11 @@ jobs:
         run: shards install
 
       - name: Generate docs
-        run: crystal docs --canonical-base-url=https://github.com/mdwagner/xls.cr
+        run: |
+          crystal docs \
+            --canonical-base-url="$server_url/$repository" \
+            --source-refname="$refname" \
+            --source-url-pattern="$server_url/$repository/blob/%{refname}/%{path}#L%{line}"
 
       - name: Archive artifact
         shell: bash
