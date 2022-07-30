@@ -32,10 +32,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # TODO: Not sure if still needed
-      - name: Install OS dependencies
-        run: apt-get install -y rsync
-
       - name: Install dependencies
         run: shards install
 
