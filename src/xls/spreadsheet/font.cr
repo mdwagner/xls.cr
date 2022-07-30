@@ -52,21 +52,9 @@ class Xls::Spreadsheet
       )
     end
 
-    enum FontColor : UInt16
-      EgaBlack
-      EgaWhite
-      EgaRed
-      EgaGreen
-      EgaBlue
-      EgaYellow
-      EgaMagenta
-      EgaCyan
-      Automatic  = 0x7FFF
-    end
-
-    @[Inspectable]
-    def color : FontColor
-      FontColor.from_value(@font.color)
+    @[Inspectable(base: 16, precision: 6)]
+    def color(default_color_index : UInt16 = 0) : UInt32
+      LibXls.get_color(@font.color, default_color_index)
     end
 
     @[Inspectable]

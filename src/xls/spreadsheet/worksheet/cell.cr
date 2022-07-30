@@ -114,14 +114,31 @@ class Xls::Worksheet
       @cell.col
     end
 
-    def xf?(spreadsheet : Spreadsheet) : Spreadsheet::Xf?
-      spreadsheet.xfs[@cell.xf]?
+    # Returns `Xls::Spreadsheet::Xf` for column formatting
+    def xf(spreadsheet : Spreadsheet) : Spreadsheet::Xf
+      spreadsheet.xfs[xf_index]
+    end
+
+    # Returns index to `Xls::Spreadsheet::Xf`
+    @[Inspectable]
+    def xf_index : UInt16
+      @cell.xf
     end
 
     # See `Xls::Worksheet#defcolwidth`
     @[Inspectable]
     def width : UInt16
       @cell.width
+    end
+
+    @[Inspectable]
+    def col_span : UInt16
+      @cell.colspan
+    end
+
+    @[Inspectable]
+    def row_span : UInt16
+      @cell.rowspan
     end
 
     # Returns whether this cell is hidden

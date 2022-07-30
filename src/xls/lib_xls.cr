@@ -206,5 +206,8 @@ module Xls
     # utility function
     fun row = xls_row(worksheet : XlsWorkSheet*, cell_row : LibC::UInt16T) : XlsRow*
     fun cell = xls_cell(worksheet : XlsWorkSheet*, cell_row : LibC::UInt16T, cell_col : LibC::UInt16T) : XlsCell*
+
+    fun get_color = xls_getColor(color : LibC::UInt16T, default_color : LibC::UInt16T) : LibC::UInt32T
+    fun get_css = xls_getCSS(workbook : XlsWorkBook*) : LibC::Char*
   end
 end

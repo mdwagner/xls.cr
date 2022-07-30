@@ -194,13 +194,16 @@ class Xls::Spreadsheet
       end
 
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16)]
       def left_line_color_index
         @line_style.bits(16..22)
       end
 
+      @[Inspectable(base: 16, precision: 6)]
+      def left_line_color(default_color_index : UInt16 = 0) : UInt32
+        LibXls.get_color(left_line_color_index, default_color_index)
+      end
+
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16)]
       def right_line_color_index
         @line_style.bits(23..29)
       end
@@ -218,21 +221,33 @@ class Xls::Spreadsheet
       end
 
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16)]
       def top_line_color_index
         @line_color.bits(0..6)
       end
 
+      @[Inspectable(base: 16, precision: 6)]
+      def top_line_color(default_color_index : UInt16 = 0) : UInt32
+        LibXls.get_color(top_line_color_index, default_color_index)
+      end
+
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16)]
       def bottom_line_color_index
         @line_color.bits(7..13)
       end
 
+      @[Inspectable(base: 16, precision: 6)]
+      def bottom_line_color(default_color_index : UInt16 = 0) : UInt32
+        LibXls.get_color(bottom_line_color_index, default_color_index)
+      end
+
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16)]
       def diag_line_color_index
         @line_color.bits(14..20)
+      end
+
+      @[Inspectable(base: 16, precision: 6)]
+      def diag_line_color(default_color_index : UInt16 = 0) : UInt32
+        LibXls.get_color(diag_line_color_index, default_color_index)
       end
 
       # Diagonal line style
@@ -247,15 +262,23 @@ class Xls::Spreadsheet
       end
 
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16)]
       def pattern_color_index
         @background_color.bits(0..6)
       end
 
+      @[Inspectable(base: 16, precision: 6)]
+      def pattern_color(default_color_index : UInt16 = 0) : UInt32
+        LibXls.get_color(pattern_color_index, default_color_index)
+      end
+
       # See http://sc.openoffice.org/excelfileformat.pdf, page 196 for color index mapping
-      @[Inspectable(base: 16)]
       def pattern_background_color_index
         @background_color.bits(7..13)
+      end
+
+      @[Inspectable(base: 16, precision: 6)]
+      def pattern_background_color(default_color_index : UInt16 = 0) : UInt32
+        LibXls.get_color(pattern_background_color_index, default_color_index)
       end
     end
 

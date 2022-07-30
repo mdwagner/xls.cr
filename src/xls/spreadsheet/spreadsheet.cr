@@ -212,6 +212,11 @@ class Xls::Spreadsheet
     end
   end
 
+  # Returns CSS for spreadsheet
+  def css : String
+    Xls::Utils.ptr_to_str(LibXls.get_css(@workbook))
+  end
+
   def to_unsafe
     @workbook
   end

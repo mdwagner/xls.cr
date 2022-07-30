@@ -51,9 +51,15 @@ class Xls::Worksheet
       @colinfo.width
     end
 
-    # Returns the `Xls::Spreadsheet::Xf` for default column formatting
+    # Returns `Xls::Spreadsheet::Xf` for default column formatting
     def xf(spreadsheet : Spreadsheet) : Spreadsheet::Xf
-      spreadsheet.xfs[@colinfo.xf]
+      spreadsheet.xfs[xf_index]
+    end
+
+    # Returns index to `Xls::Spreadsheet::Xf`
+    @[Inspectable]
+    def xf_index : UInt16
+      @colinfo.xf
     end
 
     # Returns option flags

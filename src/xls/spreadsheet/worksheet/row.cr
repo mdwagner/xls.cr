@@ -62,8 +62,15 @@ class Xls::Worksheet
       Height.new(@row.height)
     end
 
-    def xf?(spreadsheet : Spreadsheet) : Spreadsheet::Xf?
-      spreadsheet.xfs[@row.xf]?
+    # Returns `Xls::Spreadsheet::Xf` for column formatting
+    def xf(spreadsheet : Spreadsheet) : Spreadsheet::Xf
+      spreadsheet.xfs[xf_index]
+    end
+
+    # Returns index to `Xls::Spreadsheet::Xf`
+    @[Inspectable]
+    def xf_index : UInt16
+      @row.xf
     end
 
     def to_unsafe
