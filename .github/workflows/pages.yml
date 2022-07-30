@@ -32,6 +32,9 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v1
 
+      - name: Install OS dependencies
+        run: apt-get update && apt-get install -y bash
+
       - name: Install dependencies
         run: shards install
 
