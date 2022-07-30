@@ -25,7 +25,7 @@ jobs:
     container:
       image: crystallang/crystal:1.4.1
 
-    environment:
+    env:
       server_url: ${{ github.server_url }}
       repository: ${{ github.repository }}
       refname: ${{ github.ref }}
