@@ -25,11 +25,6 @@ jobs:
     container:
       image: crystallang/crystal:1.4.1
 
-    env:
-      server_url: ${{ github.server_url }}
-      repository: ${{ github.repository }}
-      refname: ${{ github.ref }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -43,9 +38,9 @@ jobs:
       - name: Generate docs
         run: |
           crystal docs \
-            --canonical-base-url="$server_url/$repository" \
-            --source-refname="$refname" \
-            --source-url-pattern="$server_url/$repository/blob/%{refname}/%{path}#L%{line}"
+            --canonical-base-url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            --source-refname="$GITHUB_SHA" \
+            --source-url-pattern="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/%{refname}/%{path}#L%{line}"
 
       - name: Archive artifact
         shell: bash
