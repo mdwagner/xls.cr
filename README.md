@@ -12,7 +12,7 @@ Crystal bindings to [libxls](https://github.com/libxls/libxls) to read old Excel
    dependencies:
      xls:
        github: mdwagner/xls.cr
-       version: 0.4.0
+       version: 0.4.1
    ```
 
 1. Run `shards install`
